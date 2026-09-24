@@ -1,6 +1,6 @@
 <div align="center">
 
-# Amethyst v1.0.6
+# Amethyst v1.0.7
 
 **Among Us 反作弊与辅助模组**
 
@@ -11,7 +11,7 @@
 <img src="https://img.shields.io/badge/Among%20Us-IL2CPP-000000?style=for-the-badge&logo=amongus&logoColor=white" alt="Among Us">
 <img src="https://img.shields.io/badge/BepInEx-6.x-5865F2?style=for-the-badge" alt="BepInEx">
 <img src="https://img.shields.io/badge/.NET-6.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET">
-<img src="https://img.shields.io/badge/version-1.0.6-9b59b6?style=for-the-badge" alt="version">
+<img src="https://img.shields.io/badge/version-1.0.7-9b59b6?style=for-the-badge" alt="version">
 <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge&logo=gnu&logoColor=white" alt="License">
 
 </div>
@@ -141,7 +141,7 @@ Amethyst（紫晶）是一个在私人房间内使用的 Among Us 反作弊模�
    - **Epic**：库 → Among Us → 管理，通常位于 `C:\Program Files\Epic Games\AmongUs`
 3. 将 BepInEx 解压到游戏目录（与 `Among Us.exe` 同级）
 4. 先启动游戏一次到主菜单再关闭（会生成 `BepInEx/plugins` 目录）
-5. 将 **`Amethyst_v1.0.6.dll`** 放入 `BepInEx/plugins/`
+5. 将 **`Amethyst_v1.0.7.dll`** 放入 `BepInEx/plugins/`
 6. 启动游戏，按 `Insert` 打开菜单
 
 > 首次启动会生成配置文件 `BepInEx/config/`，删除对应 `.cfg` 可重置设置。
@@ -180,11 +180,28 @@ Amethyst（紫晶）是一个在私人房间内使用的 Among Us 反作弊模�
 dotnet build src/Amethyst.csproj -c Release
 ```
 
-构建产物为 `src/bin/Release/net6.0/Amethyst.dll`（及带版本号副本 `Amethyst_v1.0.6.dll`）。
+构建产物为 `src/bin/Release/netcoreapp6.0/Amethyst.dll`（及带版本号副本 `Amethyst_v1.0.7.dll`）。
 
 ---
 
 ## 更新日志
+
+### v1.0.7
+
+- **新增 主界面展示图片**：用自己准备的图片铺满主界面（等比覆盖、按分辨率自适应），并联动隐藏原版漂浮人物与白点
+- **新增 落雪效果**：主界面下雪，独立开关；不缩放、不遮挡按钮，亮度提升
+- **新增 技能持续时间显示小数点**：除冷却外，技能**持续时间**同样按一位小数显示
+- **新增 外挂 RPC 检测**（参考 FinalSpectrum）：识别已知外挂菜单的 RPC 特征并并入反作弊（默认仅提醒）
+- **修复 名字渲染**：
+  - 变形者变身时头顶名字被抹掉、颜色不对的问题
+  - 变形者菜单里的名字没有按玩家颜色上色
+  - **本地玩家自己**变形后名字变成红色（现改为名字颜色强制跟随身体颜色）
+- **修复 蘑菇混合破坏**：自由模式下破坏期间名字没有隐藏、且名字颜色不渲染；现在破坏期间隐藏名字、结束自动复原
+- **修复 主界面滑入动画**：先点「制作人员」再点「开始」没有动画；并修掉一处每帧 `GameObject.Find` 造成的掉帧
+- **修复 会议身份标记面板**：被会议铭牌遮挡、多数格子人物消失、边框半透明，面板尺寸定为 1.1 倍
+- **修复 延迟 / 帧率显示**：提到最顶层，位置与字距调整
+- **移除「其他人模组检测」**功能（试做后确认稳定性不足，按要求整块删除）
+- 版本号 1.0.6 → **1.0.7**
 
 ### v1.0.6
 
