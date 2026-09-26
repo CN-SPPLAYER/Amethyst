@@ -83,6 +83,7 @@ Amethyst (紫晶) is an Among Us anti-cheat mod for private lobbies. It detects 
   role (alive `=>` dead), kill count / task progress, cause of death (killed with the killer listed / ejected / disconnected / died / survived) and the match result
 - One-click copy as plain text
 - **Lobby only** — showing other players' roles during a match would be cheating, so it is never displayed in-game
+- **Open behavior**: the window is **closed by default** and only opens when you press `F2`, except that it opens **automatically once on the post-match screen**. The open/closed state is not saved, so entering a lobby always starts closed. Closing it on the post-match screen keeps it closed.
 
 ### 🎮 Role Colors
 
@@ -98,7 +99,7 @@ Every **vanilla role** is rendered in its own color instead of the flat impostor
 | **Noisemaker** | `#FF4A62` | | Crewmate Ghost | `#8CFFFF` |
 | Detective | `#625EEE` | | Judge | `#F8D85A` |
 
-- The palette is ported from [EndlessHostRoles](https://github.com/All-Of-Us-Mods/EndlessHostRoles) (`RoleHtmlColors`, vanilla section)
+- The palette is ported from [EndlessHostRoles](https://github.com/Gurge44/EndlessHostRoles) (`RoleHtmlColors`, vanilla section)
 - Applied to the **role-assignment screen** (the intro "You Are" text), the **overhead role name**, meetings, chat, and the role-info panel
 - Any role added by a future game update automatically falls back to its team color, and a startup self-check reports any role that has no dedicated color
 
@@ -262,6 +263,7 @@ Deployment is skipped (with a warning) if the directory is missing or the game i
 - **Fixed — Overlapping text** in the server readout caused by applying `<mspace>` (a monospace tag) to wide CJK glyphs.
 - **Fixed — Role info panel showing only one role** and no content: the body now shows your role and its description, with other players listed only when you are allowed to see them.
 - **Fixed — Localization loader**: text lookup is now case-insensitive, so `MENU`/`Menu`, `BAN`/`Ban` and `IMPORTTXT`/`ImportTxt` all resolve instead of sometimes showing the raw key.
+- **Fixed — Recap window auto-opening on lobby entry**: the window's visibility flag defaulted to `true`, so it popped up the moment you entered a lobby. It now **starts closed** and only opens when you press the recap hotkey (`F2`), except for the single automatic open on the post-match screen — which is edge-triggered, so closing it there keeps it closed.
 - Actions on the role-info panel, the UI-optimization toggles and the performance toggles now **default to on**; turn them off manually if you prefer.
 - Version 1.0.8 → **1.0.9**
 
