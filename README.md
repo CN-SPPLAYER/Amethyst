@@ -2,9 +2,9 @@
 
 # Amethyst v1.0.8
 
-**Among Us 反作弊与辅助模组**
+**Among Us Anti-Cheat & Utility Mod**
 
-一个基于 BepInEx(IL2CPP) 的 Among Us 客户端模组，提供 RPC 反作弊、玩家管理、安全防护与实用的对局/大厅辅助功能。适合房主在自己的私人房间中防外挂使用。
+An Among Us client mod based on BepInEx (IL2CPP) that provides RPC anti-cheat, player management, security protection, and practical in-game/lobby utility features. Suitable for hosts to use against cheaters in their own private rooms.
 
 <br>
 
@@ -18,256 +18,256 @@
 
 ---
 
-## 简介
+## Introduction
 
-Amethyst（紫晶）是一个在私人房间内使用的 Among Us 反作弊模组。它通过捕获“不可能发生的 RPC”（如船员击杀、船员破坏、会议中进管、替他人进管、管道踢人漏洞等）来判断玩家是否使用外挂，并在主机端选择 **提醒 / 踢出 / 封禁**。同时也集成了玩家进出检测、封禁名单、等级守卫以及多项对局体验优化。
+Amethyst is an Among Us anti-cheat mod intended for use in private rooms. It determines whether a player is cheating by catching "impossible RPCs" (such as crewmate kills, crewmate sabotages, venting during meetings, venting on behalf of others, vent-kick exploits, etc.), and lets the host choose to **Warn / Kick / Ban**. It also integrates player join/leave detection, a ban list, level guard, and several gameplay experience improvements.
 
-> 本模组仅限房主在自己的私人房间中使用，请勿在公开房间使用以避免影响他人游戏体验。
-
----
-
-## 功能特性
-
-### 🛡 反作弊
-
-- **RPC 检测**：捕获不可能的 RPC（船员击杀、船员破坏、无权限进管、伪造管道 ID、会议中进管/破坏/关门、地图外破坏、变形/隐身等角色越权行为）
-- **击杀检测**：伪装者击杀伪装者、死者发动击杀、反复击杀已死亡玩家
-- **丢弃 RPC**：主机端丢弃被判定的异常 RPC 数据包，使其不生效
-- **处理方式**：对作弊者可选择 **无 / 警告 / 踢出 / 封禁**
-- **RPC 洪水检测**：检测单客户端高频刷 RPC
-- **早期会议拦截**：拦截开局 15 秒内的会议/报告
-- **大厅伪造会议拦截**：阻止大厅中的伪造会议 UI
-
-### 🚪 进管 / 滑索防护
-
-- **管道规则**：会议中进管、无权进管、伪造管道 ID、替他人进管
-- **防强制进管 / 防被踢出管道**：拦截针对本机的强制透传与顶出
-- **防管道踢人漏洞**：主机端处罚发送该漏洞包的客户端
-- **防强制滑索**：拦截针对本机的强制滑索
-- **反作弊服务器绕过**：通过 DTLS 绕过服务器对非房主动作的 RPC 反作弊，使离线端拦截更可靠
-
-### 🕵 玩家管理
-
-- **进出检测**：显示加入玩家的昵称、平台、等级等
-- **封禁名单**：按 FriendCode / PUID 进房即踢/封禁
-- **等级守卫**：可设置最低 / 最高等级并选择动作
-- **玩家历史 / 作弊历史**（**强制开启**，只写文件、不出现在任何界面）：
-  每次玩家进出记录 名字 / 好友码 / PUID / 平台 / 等级到 `Amethyst/PlayerHistory.txt`；
-  触发反作弊时另记 名字 / 好友码 / PUID / 平台 / 原因到 `Amethyst/CheatHistory.txt`（与封禁名单同目录）。
-  支持按好友码**回读历史**，用于补全大退玩家的名字
-
-### 🌊 网络防护
-
-- 丢弃针对本机的强制位置传送
-- 丢弃超大 GameData 包，防大消息崩溃/超载
-- 丢弃非法/畸形类型的 GameData 子消息
-- 加固 PackedUInt 反序列化，抵御畸形定长整数
-- 防护 VotingComplete 超大投票数组导致的分配超载
-- **Spawn 洪水防护**：裁剪单帧海量生成，防卡死/崩溃
-
-### 🧩 躲猫猫（Hide & Seek）模式防护
-
-- 检测并拦截 H&S 中的报告、关门、破坏、非法进管等异常行为
-
-### 👥 房间与会话
-
-- **会议显示房主**：开会时左上角显示房主
-- **身份显示**：死后显示全场身份；存活时可显示自己的身份、伪装者队友身份
-- **匹配中解锁踢/封**：房主可在对局中踢人/封禁
-- **抢占颜色**：仅在大厅生效，目标颜色空闲时自动抢占（可选，默认关闭）
-- **自动返回大厅**、**NoWin（不结束对局）**
-
-### 📋 复盘信息
-
-- 在大厅按 `F2` 打开可拖动的**复盘窗口**，查看**上一局**每名玩家的：
-  身份（生前 `=>` 死后）、击杀数 / 任务进度、死因（被击杀并附凶手 / 被放逐 / 已掉线 / 死亡 / 存活）以及当局结果
-- 支持一键复制为纯文本
-- **只在大厅可用** —— 对局中显示他人身份属于作弊行为，因此对局中一律不显示
-
-### 🎮 界面优化
-- **鼠标悬停按钮变主题色**：鼠标移到任意可交互按钮上即渲染成主题色（全局生效，可在界面优化里开关）。
-> 主界面右侧面板的“从右向左”滑入动画为内置行为，**强制开启**。
-
-**注意：已经没有「界面优化」总开关了** —— 该分组下的每个小功能都是**各自独立的开关**，
-在菜单的「其他功能 → 界面优化」里逐项设置：
-
-- **主界面优化**：精简主界面杂乱元素——隐藏背景杂色、左侧面板底框与分隔线、窗户高光、全屏色调遮罩、好友请求角标；**保留 Among Us 标志**
-- **主界面滑入**：点“开始 / 我的账号 / 制作人员”时右侧面板从右向左滑入；打开设置、公告、仓库、商店时自动滑出，避免遮挡
-- **会议身份标记**：会议中每名玩家头像旁有一个 `EditTag` 图标，点击调出游戏原版「变形者菜单」来选择身份并标记该玩家；
-  标记显示在**会议名字旁**与**游戏内头顶**，内鬼红 / 船员蓝、内鬼在前船员在后；列表末尾提供「清除标记」，
-  对局结束自动全部清零（本地标记，只有自己看得到；自己的那一格不显示图标）
-- **复盘信息**：大厅内按 `F2` 查看上一局详情（见上文「复盘信息」）
-- 强制显示开始按钮、跳过击杀动画
-- 显示优化：更好的 ping / 冷却显示、破坏冷却显示
-- 房间信息：房间查找最多展示 10 个（可滚动），每行显示房主名/平台/房号
-- 颜色名称显示：在玩家附近显示其颜色名称
-- 名字颜色：自己与他人名字按各自颜色显示，伪装者视角下队友显示为红色（聊天气泡、会议投票、以及会议开场“谁死亡 / 谁报告”介绍画面均生效；驱逐结算画面保持游戏原生）
-- 显示相关：会议左上角显示房主、显示自身身份、显示伪装者队友身份、死亡后显示所有人身份
-- 装扮保存（仓库页 6 个预设按钮，一键换装）
-- 解锁 240 FPS、解锁全部装扮、跳过断线惩罚、自动返回大厅 在“显示与身份”中单独开关（**同样独立，不随其它开关联动**）
-- 更佳聊天：富文本输入、复制粘贴、气泡动画、暗色主题
-- 菜单悬浮按钮
-
-### 🚀 启动界面与品牌替换
-- **启动更新检查**：进游戏先在启动画面检查模组更新，显示「正在检查模组是否有可用更新」；
-  结果分三种 —— 网络错误（琥珀）、当前版本已过期（红）、当前版本无需更新（绿），
-  文案切换为**淡出淡入**；**检查完成才放行**进入主界面（带 12 秒硬超时兜底，不会卡死）。
-- **启动画面**：改用模组自绘字标 + 右下角「正在启动游戏」与转圈，屏蔽原版启动音。
-- **加载提示**：开局加载（房主 / 成员都一样）时右下角显示「正在设置您的游戏」+ 转圈。
-- **品牌替换**：原版 Among Us 标志（主界面 / 加载界面 / 启动画面动画）隐藏并换成模组字标。
-### 🔍 模组客户端识别
-
-- 在房间中识别并标记其他兼容的模组客户端
-
-### 🎨 个性化
-
-- 多语言：中文 / English / Русский
-- UI 主题与缩放可调，可屏蔽遥测/崩溃上报
+> This mod is intended only for hosts to use in their own private rooms. Please do not use it in public rooms to avoid affecting other players' experience.
 
 ---
 
-## 快捷键
+## Features
 
-| 按键 | 功能 |
+### 🛡 Anti-Cheat
+
+- **RPC Detection**: Catches impossible RPCs (crewmate kills, crewmate sabotages, unauthorized venting, forged vent IDs, venting/sabotaging/closing doors during meetings, sabotages outside the map, Shapeshifter/Phantom privilege abuse, etc.)
+- **Kill Detection**: Impostor killing Impostor, dead players performing kills, repeatedly killing already-dead players
+- **RPC Discarding**: The host discards flagged abnormal RPC packets so they don't take effect
+- **Handling Options**: For cheaters, choose **None / Warn / Kick / Ban**
+- **RPC Flood Detection**: Detects high-frequency RPC spamming from a single client
+- **Early Meeting Interception**: Blocks meetings/reports within the first 15 seconds of a game
+- **Lobby Fake Meeting Interception**: Prevents fake meeting UI in the lobby
+
+### 🚪 Vent / Zipline Protection
+
+- **Vent Rules**: Venting during meetings, unauthorized venting, forged vent IDs, venting on behalf of others
+- **Anti-Force-Vent / Anti-Vent-Kick**: Blocks forced pass-through and ejections targeting the local client
+- **Anti Vent-Kick Exploit**: The host punishes clients that send the exploit packet
+- **Anti-Force-Zipline**: Blocks forced ziplines targeting the local client
+- **Anti-Cheat Server Bypass**: Bypasses the server's RPC anti-cheat for non-host actions via DTLS, making client-side interception more reliable
+
+### 🕵 Player Management
+
+- **Join/Leave Detection**: Shows joining players' names, platforms, levels, etc.
+- **Ban List**: Kick/ban on join by FriendCode / PUID
+- **Level Guard**: Set minimum/maximum levels and choose an action
+- **Player History / Cheat History** (**forced on**, file-only, never shown in any UI):
+  Logs each player's join/leave as name / friend code / PUID / platform / level to `Amethyst/PlayerHistory.txt`;
+  When anti-cheat triggers, separately logs name / friend code / PUID / platform / reason to `Amethyst/CheatHistory.txt` (same directory as the ban list).
+  Supports **reading back history** by friend code, used to fill in names of players who force-quit
+
+### 🌊 Network Protection
+
+- Discards forced position teleports targeting the local client
+- Discards oversized GameData packets to prevent large-message crashes/overload
+- Discards illegal/malformed GameData sub-messages
+- Hardens PackedUInt deserialization against malformed fixed-length integers
+- Protects against allocation overload caused by oversized VotingComplete vote arrays
+- **Spawn Flood Protection**: Trims massive single-frame spawns to prevent freezes/crashes
+
+### 🧩 Hide & Seek Mode Protection
+
+- Detects and blocks abnormal behaviors in H&S such as reports, door closing, sabotages, and illegal venting
+
+### 👥 Room & Session
+
+- **Show Host in Meetings**: Displays the host in the top-left during meetings
+- **Role Display**: Shows all roles after death; while alive, can show your own role and Impostor teammates' roles
+- **Unlock Kick/Ban During Matchmaking**: The host can kick/ban players during a match
+- **Color Sniping**: Only works in the lobby; automatically snipes a target color when it's free (optional, off by default)
+- **Auto Return to Lobby**, **NoWin (don't end the match)**
+
+### 📋 Recap Info
+
+- Press `F2` in the lobby to open a draggable **Recap Window** showing **last match's** details for each player:
+  Role (alive `=>` dead), kills / task progress, cause of death (killed with killer noted / ejected / disconnected / dead / alive), and the match result
+- Supports one-click copy as plain text
+- **Lobby-only** — showing others' roles during a match is cheating, so it is never displayed during a match
+
+### 🎮 UI Improvements
+- **Mouse Hover Buttons Turn Theme Color**: Hovering over any interactive button renders it in the theme color (global effect, can be toggled in UI Improvements).
+> The "right-to-left" slide-in animation of the main menu's right panel is built-in behavior and is **forced on**.
+
+**Note: There is no longer a master "UI Improvements" toggle** — each sub-feature under this group is an **independent toggle**,
+configured individually under "Other Features → UI Improvements" in the menu:
+
+- **Main Menu Improvements**: Streamlines cluttered main menu elements — hides background noise, the left panel's backdrop and divider lines, window highlights, full-screen tint overlay, and friend request badges; **keeps the Among Us logo**
+- **Main Menu Slide-In**: Clicking "Start / My Account / Credits" slides the right panel in from right to left; opening Settings, Announcements, Inventory, or Shop automatically slides it out to avoid blocking
+- **Meeting Role Tags**: During meetings, each player's avatar has an `EditTag` icon; clicking it opens the game's original "Shapeshifter Menu" to choose a role and tag that player;
+  Tags appear **next to the meeting name** and **above the player's head in-game**, Impostor red / Crewmate blue, Impostors first then Crewmates; a "Clear Tags" option is provided at the end of the list,
+  and all tags are automatically cleared when the match ends (local tags, only visible to you; your own slot shows no icon)
+- **Recap Info**: Press `F2` in the lobby to view last match's details (see "Recap Info" above)
+- Force-show the Start button, skip kill animations
+- Display improvements: better ping / cooldown display, sabotage cooldown display
+- Room Info: Room search shows up to 10 rooms (scrollable), each row showing host name/platform/room code
+- Color Name Display: Shows a player's color name near them
+- Name Colors: Your and others' names display in their respective colors; from the Impostor's perspective, teammates show as red (applies to chat bubbles, meeting votes, and the meeting opening "who died / who reported" intro screen; the ejection result screen keeps the game's native look)
+- Display-related: Show host in the top-left of meetings, show your own role, show Impostor teammates' roles, show everyone's roles after death
+- Cosmetic Saving (6 preset buttons on the inventory page for one-click outfit changes)
+- Unlock 240 FPS, unlock all cosmetics, skip disconnect penalty, auto return to lobby are separate toggles under "Display & Roles" (**also independent, not linked to other toggles**)
+- Better Chat: Rich text input, copy-paste, bubble animations, dark theme
+- Menu floating button
+
+### 🚀 Startup Screen & Branding Replacement
+- **Startup Update Check**: On game launch, first checks for mod updates on the splash screen, showing "Checking for available mod updates";
+  Three possible results — network error (amber), current version outdated (red), current version up to date (green),
+  with text transitions using **fade-out/fade-in**; **entry to the main menu is only allowed after the check completes** (with a 12-second hard timeout fallback so it never freezes).
+- **Splash Screen**: Replaced with a mod-drawn wordmark + "Starting Game" and a spinner in the bottom-right, and the original startup sound is muted.
+- **Loading Tip**: During match loading (same for host / member), shows "Setting up your game" + a spinner in the bottom-right.
+- **Branding Replacement**: The original Among Us logo (main menu / loading screen / splash animation) is hidden and replaced with the mod wordmark.
+### 🔍 Mod Client Detection
+
+- Identifies and marks other compatible mod clients in the room
+
+### 🎨 Personalization
+
+- Multi-language: Chinese / English / Русский
+- Adjustable UI theme and scale, can block telemetry/crash reporting
+
+---
+
+## Hotkeys
+
+| Key | Function |
 |:---:|:-----|
-| `Insert` | 打开 / 关闭主菜单 |
-| `F2` | 显示 / 隐藏复盘信息（仅大厅） |
-| `F6` | 复制当前大厅代码 |
+| `Insert` | Open / close the main menu |
+| `F2` | Show / hide recap info (lobby only) |
+| `F6` | Copy the current lobby code |
 
-> 按键可在 `BepInEx/config/` 配置文件中修改（`Keys.MenuKey` / `Keys.RecapKey` / `Keys.CopyCodeKey`）。
-
----
-
-## 安装说明
-
-> Amethyst 需要 **BepInEx (IL2CPP, Windows x64)** 运行环境。
-
-1. 下载并安装 **BepInEx BleedingEdge — IL2CPP (`win-x64`)**
-2. 找到 Among Us 安装目录：
-   - **Steam**：库 → 右键 Among Us → 管理 → 浏览本地文件
-   - **Epic**：库 → Among Us → 管理，通常位于 `C:\Program Files\Epic Games\AmongUs`
-3. 将 BepInEx 解压到游戏目录（与 `Among Us.exe` 同级）
-4. 先启动游戏一次到主菜单再关闭（会生成 `BepInEx/plugins` 目录）
-5. 将 **`Amethyst_v1.0.8.dll`** 放入 `BepInEx/plugins/`
-6. 启动游戏，按 `Insert` 打开菜单
-
-> 首次启动会生成配置文件 `BepInEx/config/`，删除对应 `.cfg` 可重置设置。
+> Keys can be changed in the `BepInEx/config/` config file (`Keys.MenuKey` / `Keys.RecapKey` / `Keys.CopyCodeKey`).
 
 ---
 
-## 反作弊提示
+## Installation
 
-反作弊命中会弹出提示并按设定处理（提醒/踢出/封禁）。常见判定包括但不限于：
+> Amethyst requires the **BepInEx (IL2CPP, Windows x64)** runtime.
 
-| 类别 | 说明 |
+1. Download and install **BepInEx BleedingEdge — IL2CPP (`win-x64`)**
+2. Locate the Among Us installation directory:
+   - **Steam**: Library → right-click Among Us → Manage → Browse Local Files
+   - **Epic**: Library → Among Us → Manage, usually at `C:\Program Files\Epic Games\AmongUs`
+3. Extract BepInEx into the game directory (same level as `Among Us.exe`)
+4. Launch the game once to the main menu, then close it (this creates the `BepInEx/plugins` directory)
+5. Place **`Amethyst_v1.0.8.dll`** into `BepInEx/plugins/`
+6. Launch the game and press `Insert` to open the menu
+
+> The first launch generates the config file in `BepInEx/config/`; delete the corresponding `.cfg` to reset settings.
+
+---
+
+## Anti-Cheat Notes
+
+When anti-cheat triggers, a notification pops up and the configured action is taken (warn/kick/ban). Common detections include but are not limited to:
+
+| Category | Description |
 |:-----|:-----|
-| 船员击杀 | 船员角色发起击杀 |
-| 伪装者击杀伪装者 | 伪装者击杀队友 |
-| 死者发动击杀 | 已死亡的玩家发起击杀 |
-| 反复击杀已死亡玩家 | 反复击杀已死亡的目标 |
-| 船员破坏 / 地图外破坏 | 船员或在非法位置发起破坏 |
-| 快速破坏 | 极短时间内对不同系统连续破坏 |
-| 会议中进管 / 破坏 / 关门 | 会议期间的不可能行为 |
-| 无权进管 / 伪造管道 ID | 无权限进管或使用伪造管道 ID |
-| 替他人进管 | 将他人强制送入/顶出管道 |
-| 管道踢人漏洞 | vent-kick 漏洞利用 |
-| 强制滑索 | 强制滑索使用 |
-| 已知作弊菜单特征 | 检测到已知作弊菜单的 RPC 签名 |
-| H&S 报告/破坏/关门/非法进管 | 躲猫猫模式异常 |
-| 大厅游戏 RPC | 未开局时伪造的击杀/会议/变形等对局 RPC |
-| RPC 洪水 | 单客户端高频刷 RPC |
+| Crewmate Kill | A Crewmate role performing a kill |
+| Impostor Kills Impostor | An Impostor killing a teammate |
+| Dead Player Kill | A dead player performing a kill |
+| Repeatedly Killing Dead Players | Repeatedly killing already-dead targets |
+| Crewmate Sabotage / Off-Map Sabotage | A Crewmate or an illegal position initiating a sabotage |
+| Rapid Sabotage | Consecutive sabotages on different systems within a very short time |
+| Venting / Sabotaging / Closing Doors During Meetings | Impossible actions during meetings |
+| Unauthorized Venting / Forged Vent ID | Venting without permission or using a forged vent ID |
+| Venting on Behalf of Others | Forcing others into/out of vents |
+| Vent-Kick Exploit | vent-kick exploit usage |
+| Forced Zipline | Forced zipline usage |
+| Known Cheat Menu Signatures | Detected RPC signatures of known cheat menus |
+| H&S Report/Sabotage/Door Close/Illegal Vent | Hide & Seek mode anomalies |
+| Lobby Game RPC | Forged kill/meeting/shapeshift and other match RPCs before the game starts |
+| RPC Flood | High-frequency RPC spamming from a single client |
 
 ---
 
-## 从源码构建
+## Building from Source
 
-需要 Among Us 游戏程序集引用（`Assembly-CSharp.dll` 等），工程通过 `GameRefsDir` 指向游戏解包引用目录。
+Requires Among Us game assembly references (`Assembly-CSharp.dll`, etc.). The project points to the game's unpacked reference directory via `GameRefsDir`.
 
 ```
 dotnet build src/Amethyst.csproj -c Release
 ```
 
-构建产物为 `src/bin/Release/netcoreapp6.0/Amethyst.dll`（及带版本号副本 `Amethyst_v1.0.8.dll`）。
+The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.0.8.dll`).
 
 ---
 
-## 更新日志
+## Changelog
 ### v1.0.8
-- 启动界面：改为先检查模组更新（网络错误/已过期/无需更新三种结果，淡出淡入切换），检查完成才放行进入主界面；
-  右下角常驻「正在启动游戏」+ 转圈；可自定义字标与紫色小人不适用。
-- 启动界面文案：加载阶段右下角显示「正在设置您的游戏」+ 转圈。
-- 界面优化：新增「鼠标悬停按钮变主题色」开关（全局生效，覆盖所有可交互按钮）。
-- 加载界面：原版 Among Us 标志改为模组字标；加载条使用原版配色。
-- 主界面优化：隐藏好友栏背景板；移除主题切换，固定 #A06EFF。
-- 标记身份：修复"死了人之后面板被会议铭牌遮挡"（面板期间临时隐藏铭牌，关闭即恢复）。
+- Splash screen: Now checks for mod updates first (three results: network error / outdated / up to date, with fade transitions), and only allows entry to the main menu after the check completes;
+  "Starting Game" + spinner is persistently shown in the bottom-right; custom wordmark and purple stick figure are not applicable.
+- Splash screen text: During the loading phase, "Setting up your game" + spinner is shown in the bottom-right.
+- UI Improvements: Added a "Mouse Hover Buttons Turn Theme Color" toggle (global effect, covering all interactive buttons).
+- Loading screen: The original Among Us logo is replaced with the mod wordmark; the loading bar uses the original color scheme.
+- Main menu improvements: Hidden the friends list background panel; removed theme switching, fixed to #A06EFF.
+- Role Tags: Fixed "panel obscured by meeting nameplates after a death" (nameplates are temporarily hidden while the panel is open, restored on close).
 
 ### v1.0.7
 
-- **新增 主页信息**：主页新增独立卡片**「更多信息」**（**系统**（含架构） / **游戏版本** / **BepInEx 版本** / **已加载模组数量**）；「关于」卡片保持只放模组自身的版本与作者
-- **模组通知独立**：反作弊 / 防护 / 管理 / 模组检测等通知改为**模组自己的通知卡片**（屏幕上方，不再占用原版左下角通知栏）
-- **新增 启动加载界面**：启动游戏时接管加载画面，正中是模组字标（自制图标）+ 呼吸光晕 + 版本号，右下角「正在启动游戏」配转圈圆环
-- **模组通知美化**：纯文本卡片（**不渲染玩家颜色**），淡入淡出与卡片完全同步；不显示玩家装扮
-- **移除「显示平台及等级」**：不再由模组发进/离提示，玩家正常进/离开完全交给原版通知
-- **帧率解锁改为可调**：开关改为「解锁帧率」，开启后可滑动（或点箭头微调）选择 **60~240** 之间的帧率上限，默认 240；关闭即回到原版 60
-- **主题固定**：移除主题配色选择器，界面主题强制为 **#A06EFF**（即原来列表里的 Violet 色号）
-- **新增 主界面展示图片**：用自己准备的图片铺满主界面（等比覆盖、按分辨率自适应），并联动隐藏原版漂浮人物与白点
-- **新增 落雪效果**：主界面下雪，独立开关；不缩放、不遮挡按钮，亮度提升
-- **新增 技能持续时间显示小数点**：除冷却外，技能**持续时间**同样按一位小数显示
-- **新增 外挂 RPC 检测**（参考 FinalSpectrum）：识别已知外挂菜单的 RPC 特征并并入反作弊（默认仅提醒）
-- **修复 名字渲染**：
-  - 变形者变身时头顶名字被抹掉、颜色不对的问题
-  - 变形者菜单里的名字没有按玩家颜色上色
-  - **本地玩家自己**变形后名字变成红色（现改为名字颜色强制跟随身体颜色）
-- **修复 蘑菇混合破坏**：自由模式下破坏期间名字没有隐藏、且名字颜色不渲染；现在破坏期间隐藏名字、结束自动复原
-- **修复 房间成员的地图加载进度**：作为房间成员（非房主）时进度条一直卡在 30%「正在生成地图」（游戏只在房主端提供真实加载进度），现在会平滑推进到约 68% 后等地图就绪
-- **修复 主界面滑入动画**：先点「制作人员」再点「开始」没有动画；并修掉一处每帧 `GameObject.Find` 造成的掉帧
-- **修复 会议身份标记面板**：被会议铭牌遮挡、多数格子人物消失、边框半透明，面板尺寸定为 1.1 倍
-- **修复 延迟 / 帧率显示**：提到最顶层，位置与字距调整
-- **移除「其他人模组检测」**功能（试做后确认稳定性不足，按要求整块删除）
-- 版本号 1.0.6 → **1.0.8**
+- **Added Home Info**: A new independent card **"More Info"** on the home page (**System** (including architecture) / **Game Version** / **BepInEx Version** / **Number of Loaded Mods**); the "About" card keeps only the mod's own version and author
+- **Independent Mod Notifications**: Anti-cheat / protection / management / mod detection notifications now use **the mod's own notification cards** (top of screen, no longer occupying the original bottom-left notification bar)
+- **Added Startup Loading Screen**: Takes over the loading screen on game launch, with the mod wordmark (custom icon) + breathing glow + version number in the center, and "Starting Game" with a spinner ring in the bottom-right
+- **Mod Notification Beautification**: Plain-text cards (**no player color rendering**), fade in/out fully synced with the card; player cosmetics are not shown
+- **Removed "Show Platform and Level"**: The mod no longer sends join/leave notices; normal player join/leave is entirely handled by the original notifications
+- **Frame Rate Unlock Now Adjustable**: The toggle is now "Unlock Frame Rate"; when enabled, you can slide (or tap arrows to fine-tune) to choose a frame rate cap between **60~240**, default 240; disabling returns to the original 60
+- **Theme Fixed**: Removed the theme color selector; the UI theme is forced to **#A06EFF** (the Violet color code from the original list)
+- **Added Main Menu Display Image**: Fill the main menu with your own prepared image (proportional cover, resolution-adaptive), and linked hiding of the original floating characters and white dots
+- **Added Snow Effect**: Snow in the main menu, independent toggle; no scaling, doesn't block buttons, brightness increased
+- **Added Skill Duration Decimal Display**: Besides cooldowns, skill **durations** are also shown with one decimal place
+- **Added Cheat RPC Detection** (referencing FinalSpectrum): Identifies known cheat menu RPC signatures and merges them into anti-cheat (default: warn only)
+- **Fixed Name Rendering**:
+  - Names above heads being erased and colors being wrong when a Shapeshifter transforms
+  - Names in the Shapeshifter menu not colored by player color
+  - **The local player's own** name turning red after transforming (now the name color is forced to follow body color)
+- **Fixed Mushroom Mixup Sabotage**: Names were not hidden and name colors not rendered during sabotage in Freeplay mode; now names are hidden during sabotage and automatically restored when it ends
+- **Fixed Map Loading Progress for Room Members**: When a room member (not host), the progress bar was stuck at 30% "Generating Map" (the game only provides real loading progress on the host side); now it smoothly advances to about 68% and then waits for the map to be ready
+- **Fixed Main Menu Slide-In Animation**: No animation when clicking "Credits" then "Start"; also fixed a frame drop caused by a per-frame `GameObject.Find`
+- **Fixed Meeting Role Tag Panel**: Obscured by meeting nameplates, most cell characters disappearing, semi-transparent borders; panel size set to 1.1x
+- **Fixed Ping / Frame Rate Display**: Moved to the topmost layer, position and letter spacing adjusted
+- **Removed "Other Mod Detection"** feature (after testing, confirmed insufficient stability; removed entirely as requested)
+- Version 1.0.6 → **1.0.8**
 
 ### v1.0.6
 
-- **新增 会议身份标记**：会议里每名玩家的头像旁有一个 EditTag 图标，点击后调出游戏原版「变形者菜单」来选择身份并标记该玩家；
-  标记显示在会议名字旁与游戏内头顶，**内鬼红 / 船员蓝**、内鬼在前船员在后；列表末尾提供「清除标记」，对局结束自动全部清零
-- **新增 玩家历史 / 作弊历史**：强制开启，只写文件、不出现在任何界面。
-  记录每名玩家的名字 / 好友码 / PUID / 平台 / 等级，并支持按好友码**回读历史**
-- **新增 复盘信息**：在大厅可查看上一局每名玩家的身份、击杀 / 任务进度、死因以及当局结果
-- **修复 模组菜单「设置」页空白**：子标签数组下标越界，导致整页画不出任何内容
-- **修复 复盘若干问题**：掉线玩家被显示成「存活」、结算阵营可能被锁成错误阵营、身份查表缓存了一张空表
-- **修复 大退玩家名字显示为 TESTNAME**
-- **修复 主界面优化**：打开设置后隐藏效果被意外还原的问题
-- 移除实验性的「设置页配色」功能（试做后确认效果不理想）
-- 版本号 1.0.5 → **1.0.6**
+- **Added Meeting Role Tags**: In meetings, each player's avatar has an EditTag icon; clicking it opens the game's original "Shapeshifter Menu" to choose a role and tag that player;
+  Tags appear next to the meeting name and above the player's head in-game, **Impostor red / Crewmate blue**, Impostors first then Crewmates; a "Clear Tags" option is provided at the end of the list, and all tags are automatically cleared when the match ends
+- **Added Player History / Cheat History**: Forced on, file-only, never shown in any UI.
+  Records each player's name / friend code / PUID / platform / level, and supports **reading back history** by friend code
+- **Added Recap Info**: In the lobby, view last match's roles, kills / task progress, cause of death, and match result for each player
+- **Fixed Blank "Settings" Page in Mod Menu**: Sub-tab array index out of bounds caused the entire page to render nothing
+- **Fixed Several Recap Issues**: Disconnected players shown as "Alive", result faction possibly locked to the wrong faction, role lookup cache holding an empty table
+- **Fixed Force-Quit Players' Names Showing as TESTNAME**
+- **Fixed Main Menu Improvements**: Hidden effects being unexpectedly restored after opening settings
+- Removed the experimental "Settings Page Color Scheme" feature (after testing, confirmed unsatisfactory)
+- Version 1.0.5 → **1.0.6**
 
 ### v1.0.5
 
-- **新增 主界面优化**（并入“界面优化”总开关）：精简主界面杂乱元素，并保留 Among Us 标志
-- **新增 主界面滑入动画**：点“开始 / 我的账号 / 制作人员”时右侧面板从右向左滑入；
-  打开设置、公告、仓库、商店时自动滑出，避免面板遮挡弹窗
-- **修复 主界面“设置”打不开**：原版 `OptionsMenuBehaviour.Open()` 会抛空引用导致设置弹窗不显示，现已补齐字段并兜底
-- **修复 会议开场名字颜色**：修复“谁死亡 / 谁报告”介绍画面里报告人与死者名字未按玩家颜色渲染的问题；
-  驱逐（放逐结算）画面不再额外着色，保持游戏原生
-- **装扮保存 / 一键切换**：仓库页提供 6 个预设按钮
-- 版本号 1.0.4 → **1.0.5**
+- **Added Main Menu Improvements** (merged into the "UI Improvements" master toggle): Streamlines cluttered main menu elements and keeps the Among Us logo
+- **Added Main Menu Slide-In Animation**: Clicking "Start / My Account / Credits" slides the right panel in from right to left;
+  opening Settings, Announcements, Inventory, or Shop automatically slides it out to avoid the panel blocking popups
+- **Fixed Main Menu "Settings" Not Opening**: The original `OptionsMenuBehaviour.Open()` throws a null reference causing the settings popup not to display; fields are now filled in and fallbacks added
+- **Fixed Meeting Opening Name Colors**: Fixed the reporter's and deceased's names not rendering in player colors on the "who died / who reported" intro screen;
+  the ejection (exile result) screen is no longer additionally colored, keeping the game's native look
+- **Cosmetic Saving / One-Click Switching**: 6 preset buttons provided on the inventory page
+- Version 1.0.4 → **1.0.5**
 
 ---
 
-## 免责声明
+## Disclaimer
 
-Amethyst 是 Among Us 的非官方第三方修改模组。
+Amethyst is an unofficial third-party modification mod for Among Us.
 
-本项目与 Innersloth LLC 无任何关联、赞助或认可。Among Us 及其相关商标与资产归其各自所有者所有。
+This project is not affiliated with, sponsored by, or endorsed by Innersloth LLC in any way. Among Us and its related trademarks and assets belong to their respective owners.
 
-Amethyst 仅限在私人房间中使用。
+Amethyst is intended for use in private rooms only.
 
-软件以“原样”提供，不附带任何形式的保证。安装或使用即表示您接受因此产生的任何后果，包括但不限于账户限制、封禁、踢出、崩溃、进度丢失、文件损坏、游戏不稳定或与未来游戏更新不兼容。开发者不对任何因使用本软件而产生的后果、损害或误用负责。
+The software is provided "as is", without warranty of any kind. Installing or using it means you accept any consequences arising from it, including but not limited to account restrictions, bans, kicks, crashes, progress loss, file corruption, game instability, or incompatibility with future game updates. The developers are not responsible for any consequences, damages, or misuse arising from the use of this software.
 
 ---
 
-## 许可证
+## License
 
-本项目基于 **GNU GPL v3.0** 发布（见 [LICENSE](LICENSE)）。您可以自由使用、学习、分享与修改，但衍生作品必须采用相同许可证。
+This project is released under **GNU GPL v3.0** (see [LICENSE](LICENSE)). You are free to use, study, share, and modify it, but derivative works must use the same license.
 
 ---
 
