@@ -1,28 +1,28 @@
 <div align="center">
 
-# Amethyst v1.0.8
+# Amethyst v1.0.9
 
-**Among Us Anti-Cheat & Utility Mod**
+**An Among Us anti-cheat and utility mod**
 
-An Among Us client mod based on BepInEx (IL2CPP) that provides RPC anti-cheat, player management, security protection, and practical in-game/lobby utility features. Suitable for hosts to use against cheaters in their own private rooms.
+A BepInEx (IL2CPP) client-side mod for Among Us that provides RPC anti-cheat, player management, network protection and a broad set of in-game/lobby quality-of-life features. Intended for hosts who want to keep cheaters out of their own private lobbies.
 
 <br>
 
 <img src="https://img.shields.io/badge/Among%20Us-IL2CPP-000000?style=for-the-badge&logo=amongus&logoColor=white" alt="Among Us">
 <img src="https://img.shields.io/badge/BepInEx-6.x-5865F2?style=for-the-badge" alt="BepInEx">
 <img src="https://img.shields.io/badge/.NET-6.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET">
-<img src="https://img.shields.io/badge/version-1.0.8-9b59b6?style=for-the-badge" alt="version">
+<img src="https://img.shields.io/badge/version-1.0.9-9b59b6?style=for-the-badge" alt="version">
 <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge&logo=gnu&logoColor=white" alt="License">
 
 </div>
 
 ---
 
-## Introduction
+## Overview
 
-Amethyst is an Among Us anti-cheat mod intended for use in private rooms. It determines whether a player is cheating by catching "impossible RPCs" (such as crewmate kills, crewmate sabotages, venting during meetings, venting on behalf of others, vent-kick exploits, etc.), and lets the host choose to **Warn / Kick / Ban**. It also integrates player join/leave detection, a ban list, level guard, and several gameplay experience improvements.
+Amethyst (紫晶) is an Among Us anti-cheat mod for private lobbies. It detects "impossible RPCs" (crewmate kills, crewmate sabotage, venting during a meeting, venting on another player's behalf, the vent-kick exploit, and so on), decides whether a player is cheating, and lets the host choose an action: **None / Warn / Kick / Ban**. It also bundles join/leave detection, a ban list, a level guard, and many match quality-of-life features.
 
-> This mod is intended only for hosts to use in their own private rooms. Please do not use it in public rooms to avoid affecting other players' experience.
+> This mod is intended for hosts to use in their own private lobbies. Please do not use it in public lobbies, as it would ruin the experience for others.
 
 ---
 
@@ -30,244 +30,317 @@ Amethyst is an Among Us anti-cheat mod intended for use in private rooms. It det
 
 ### 🛡 Anti-Cheat
 
-- **RPC Detection**: Catches impossible RPCs (crewmate kills, crewmate sabotages, unauthorized venting, forged vent IDs, venting/sabotaging/closing doors during meetings, sabotages outside the map, Shapeshifter/Phantom privilege abuse, etc.)
-- **Kill Detection**: Impostor killing Impostor, dead players performing kills, repeatedly killing already-dead players
-- **RPC Discarding**: The host discards flagged abnormal RPC packets so they don't take effect
-- **Handling Options**: For cheaters, choose **None / Warn / Kick / Ban**
-- **RPC Flood Detection**: Detects high-frequency RPC spamming from a single client
-- **Early Meeting Interception**: Blocks meetings/reports within the first 15 seconds of a game
-- **Lobby Fake Meeting Interception**: Prevents fake meeting UI in the lobby
+- **RPC detection**: catches impossible RPCs (crewmate kills, crewmate sabotage, venting without permission, forged vent IDs, venting/sabotage/door-closing during meetings, sabotage outside the map, unauthorized shapeshift/vanish, and other role violations)
+- **Kill detection**: impostor killing an impostor, a dead player initiating a kill, repeatedly killing an already-dead player
+- **RPC dropping**: as host, drops the flagged RPC packets so they never take effect
+- **Actions**: choose **None / Warn / Kick / Ban** for the cheater
+- **RPC flood detection**: detects a single client spamming RPCs
+- **Early meeting blocking**: blocks meetings/reports during the first 15 seconds
+- **Fake lobby meeting blocking**: blocks spoofed meeting UI in the lobby
 
 ### 🚪 Vent / Zipline Protection
 
-- **Vent Rules**: Venting during meetings, unauthorized venting, forged vent IDs, venting on behalf of others
-- **Anti-Force-Vent / Anti-Vent-Kick**: Blocks forced pass-through and ejections targeting the local client
-- **Anti Vent-Kick Exploit**: The host punishes clients that send the exploit packet
-- **Anti-Force-Zipline**: Blocks forced ziplines targeting the local client
-- **Anti-Cheat Server Bypass**: Bypasses the server's RPC anti-cheat for non-host actions via DTLS, making client-side interception more reliable
+- **Vent rules**: venting during a meeting, venting without permission, forged vent IDs, venting on another player's behalf
+- **Anti force-vent / anti vent-eject**: blocks forced passthrough and ejection aimed at your client
+- **Vent-kick exploit protection**: as host, punishes the client that sends the exploit packet
+- **Anti forced zipline**: blocks forced zipline rides aimed at your client
+- **Anti-cheat server bypass**: uses DTLS to bypass the server-side RPC anti-cheat for non-host actions, making local blocking far more reliable
 
 ### 🕵 Player Management
 
-- **Join/Leave Detection**: Shows joining players' names, platforms, levels, etc.
-- **Ban List**: Kick/ban on join by FriendCode / PUID
-- **Level Guard**: Set minimum/maximum levels and choose an action
-- **Player History / Cheat History** (**forced on**, file-only, never shown in any UI):
-  Logs each player's join/leave as name / friend code / PUID / platform / level to `Amethyst/PlayerHistory.txt`;
-  When anti-cheat triggers, separately logs name / friend code / PUID / platform / reason to `Amethyst/CheatHistory.txt` (same directory as the ban list).
-  Supports **reading back history** by friend code, used to fill in names of players who force-quit
+- **Join/leave detection**: shows a joining player's nickname, platform and level
+- **Ban list**: kick/ban on join by FriendCode / PUID
+- **Level guard**: set a minimum / maximum level and choose an action
+- **Player history / cheat history** (**always on**, written to file only and never shown in any UI):
+  every join/leave records name / friend code / PUID / platform / level to `Amethyst/PlayerHistory.txt`;
+  every anti-cheat hit records name / friend code / PUID / platform / reason to `Amethyst/CheatHistory.txt` (same folder as the ban list).
+  Supports **reading history back** by friend code, which is used to recover the names of players who left abruptly
 
 ### 🌊 Network Protection
 
-- Discards forced position teleports targeting the local client
-- Discards oversized GameData packets to prevent large-message crashes/overload
-- Discards illegal/malformed GameData sub-messages
+- Drops forced position teleports aimed at your client
+- Drops oversized GameData packets to prevent large-message crashes/overload
+- Drops GameData sub-messages with an invalid/malformed type
 - Hardens PackedUInt deserialization against malformed fixed-length integers
-- Protects against allocation overload caused by oversized VotingComplete vote arrays
-- **Spawn Flood Protection**: Trims massive single-frame spawns to prevent freezes/crashes
+- Guards VotingComplete against an oversized voter array (allocation overload)
+- **Spawn flood protection**: trims a flood of spawns in a single frame to prevent freezes/crashes
 
-### 🧩 Hide & Seek Mode Protection
+### 🧩 Hide & Seek Protection
 
-- Detects and blocks abnormal behaviors in H&S such as reports, door closing, sabotages, and illegal venting
+- Detects and blocks abnormal reports, door closes, sabotage and illegal venting in H&S
 
 ### 👥 Room & Session
 
-- **Show Host in Meetings**: Displays the host in the top-left during meetings
-- **Role Display**: Shows all roles after death; while alive, can show your own role and Impostor teammates' roles
-- **Unlock Kick/Ban During Matchmaking**: The host can kick/ban players during a match
-- **Color Sniping**: Only works in the lobby; automatically snipes a target color when it's free (optional, off by default)
-- **Auto Return to Lobby**, **NoWin (don't end the match)**
+- **Show host in meetings**: shows the host in the top-left corner during a meeting
+- **Role display**: shows everyone's role after you die; while alive you can show your own role and your impostor teammates' roles
+- **Kick/ban during a match**: the host can kick/ban mid-match
+- **Color snipe**: lobby only, automatically claims your desired color when it becomes free (optional, off by default)
+- **Auto return to lobby** and **NoWin** (never end the match)
 
 ### 📋 Recap Info
 
-- Press `F2` in the lobby to open a draggable **Recap Window** showing **last match's** details for each player:
-  Role (alive `=>` dead), kills / task progress, cause of death (killed with killer noted / ejected / disconnected / dead / alive), and the match result
-- Supports one-click copy as plain text
-- **Lobby-only** — showing others' roles during a match is cheating, so it is never displayed during a match
+- Press `F2` in the lobby to open a draggable **recap window** showing, for every player in the **previous match**:
+  role (alive `=>` dead), kill count / task progress, cause of death (killed with the killer listed / ejected / disconnected / died / survived) and the match result
+- One-click copy as plain text
+- **Lobby only** — showing other players' roles during a match would be cheating, so it is never displayed in-game
 
-### 🎮 UI Improvements
-- **Mouse Hover Buttons Turn Theme Color**: Hovering over any interactive button renders it in the theme color (global effect, can be toggled in UI Improvements).
-> The "right-to-left" slide-in animation of the main menu's right panel is built-in behavior and is **forced on**.
+### 🎮 Role Colors
 
-**Note: There is no longer a master "UI Improvements" toggle** — each sub-feature under this group is an **independent toggle**,
-configured individually under "Other Features → UI Improvements" in the menu:
+Every **vanilla role** is rendered in its own color instead of the flat impostor-red / crewmate-blue.
 
-- **Main Menu Improvements**: Streamlines cluttered main menu elements — hides background noise, the left panel's backdrop and divider lines, window highlights, full-screen tint overlay, and friend request badges; **keeps the Among Us logo**
-- **Main Menu Slide-In**: Clicking "Start / My Account / Credits" slides the right panel in from right to left; opening Settings, Announcements, Inventory, or Shop automatically slides it out to avoid blocking
-- **Meeting Role Tags**: During meetings, each player's avatar has an `EditTag` icon; clicking it opens the game's original "Shapeshifter Menu" to choose a role and tag that player;
-  Tags appear **next to the meeting name** and **above the player's head in-game**, Impostor red / Crewmate blue, Impostors first then Crewmates; a "Clear Tags" option is provided at the end of the list,
-  and all tags are automatically cleared when the match ends (local tags, only visible to you; your own slot shows no icon)
-- **Recap Info**: Press `F2` in the lobby to view last match's details (see "Recap Info" above)
-- Force-show the Start button, skip kill animations
+| Role | Color | | Role | Color |
+|---|---|---|---|---|
+| Crewmate | `#8CFFFF` | | Impostor | `#C61111` |
+| Engineer | `#FF6A00` | | Shapeshifter | `#C61111` |
+| Scientist | `#8EE98E` | | Phantom | `#C61111` |
+| Guardian Angel | `#77E6D1` | | Viper | `#C61111` |
+| Tracker | `#34AD50` | | Impostor Ghost | `#C61111` |
+| **Noisemaker** | `#FF4A62` | | Crewmate Ghost | `#8CFFFF` |
+| Detective | `#625EEE` | | Judge | `#F8D85A` |
+
+- The palette is ported from [EndlessHostRoles](https://github.com/All-Of-Us-Mods/EndlessHostRoles) (`RoleHtmlColors`, vanilla section)
+- Applied to the **role-assignment screen** (the intro "You Are" text), the **overhead role name**, meetings, chat, and the role-info panel
+- Any role added by a future game update automatically falls back to its team color, and a startup self-check reports any role that has no dedicated color
+
+### 📖 Role Info Panel
+
+An in-game panel (a second task-like panel you can click to collapse/expand) showing your role and its description.
+
+- Each of the 14 vanilla roles has a **short flavour line** and a **detailed rules text**, ported from EndlessHostRoles and **fully localized in Chinese, English and Russian**
+- While alive as a crewmate it only shows your own role; after you die (or as an impostor) it also lists the other players you are allowed to see
+
+### 🎨 UI Optimization
+
+> The main menu's right-panel slide-in animation is built in and **always on**.
+
+**Note: there is no longer an "UI Optimization" master switch** — every feature in this group has its **own independent toggle**,
+set individually under **Other Features → UI Optimization**:
+
+- **Main menu optimization**: trims the clutter (background noise, left panel fill and dividers, window highlights, full-screen tint, friend-request badge) while **keeping the Among Us logo**
+- **Main menu slide-in**: clicking "Play / My Account / Credits" slides the right panel in from the right; opening Settings, Announcements, Inventory or Shop slides it out so it no longer covers the popup
+- **Meeting role tag**: in a meeting each player has an `EditTag` icon next to their avatar. Click it to open the game's own shapeshifter menu and mark that player with a role;
+  the mark appears **next to the meeting name** and **above the player's head in game**. Impostors are listed first in red, crewmates after them in blue, with a "clear tag" entry at the end.
+  All tags are cleared automatically when the match ends (local only — only you can see them; your own slot shows no icon)
+- **Recap info**: press `F2` in the lobby to review the previous match (see "Recap Info" above)
+- **Task text color**: unfinished tasks are shown in **yellow** and finished ones in **green** instead of the game's dim grey (reference: EndlessHostRoles)
+- **Task panel in meetings**: keeps your task list visible during meetings, raised above the meeting UI (reference: AUnlocker)
+- Force-show the start button, skip the kill animation
 - Display improvements: better ping / cooldown display, sabotage cooldown display
-- Room Info: Room search shows up to 10 rooms (scrollable), each row showing host name/platform/room code
-- Color Name Display: Shows a player's color name near them
-- Name Colors: Your and others' names display in their respective colors; from the Impostor's perspective, teammates show as red (applies to chat bubbles, meeting votes, and the meeting opening "who died / who reported" intro screen; the ejection result screen keeps the game's native look)
-- Display-related: Show host in the top-left of meetings, show your own role, show Impostor teammates' roles, show everyone's roles after death
-- Cosmetic Saving (6 preset buttons on the inventory page for one-click outfit changes)
-- Unlock 240 FPS, unlock all cosmetics, skip disconnect penalty, auto return to lobby are separate toggles under "Display & Roles" (**also independent, not linked to other toggles**)
-- Better Chat: Rich text input, copy-paste, bubble animations, dark theme
-- Menu floating button
+- **Better ping display**: a three-part readout — **latency | FPS | server**
+- **Server display**: shows which region/server you are on, localized per language (e.g. "Asia" / 「亚洲」 / «Азия»), with no abbreviations
+- **Room info**: Find Game lists up to 10 lobbies in a scrollable list, each row showing host name / platform / room code
+- **Color name display**: shows each player's color name near them
+- **Name colors**: your own and other players' names are rendered in their color; from an impostor's perspective teammates are shown in red (applies to chat bubbles, meeting votes and the "who died / who reported" intro screen; the ejection result screen keeps the game's native look)
+- Display options: show the host in the top-left of a meeting, show your own role, show impostor teammates' roles, show everyone's role after you die
+- **Outfit saving**: 6 preset buttons on the inventory page for one-click outfit switching
+- Unlock 240 FPS, unlock all cosmetics, skip the disconnect penalty and auto-return to lobby each have their **own independent toggle** under "Display & Roles" (**also independent — they do not follow any other switch**)
+- **Better chat**: rich text input, copy/paste, bubble animation, dark theme
+- Floating menu button
 
-### 🚀 Startup Screen & Branding Replacement
-- **Startup Update Check**: On game launch, first checks for mod updates on the splash screen, showing "Checking for available mod updates";
-  Three possible results — network error (amber), current version outdated (red), current version up to date (green),
-  with text transitions using **fade-out/fade-in**; **entry to the main menu is only allowed after the check completes** (with a 12-second hard timeout fallback so it never freezes).
-- **Splash Screen**: Replaced with a mod-drawn wordmark + "Starting Game" and a spinner in the bottom-right, and the original startup sound is muted.
-- **Loading Tip**: During match loading (same for host / member), shows "Setting up your game" + a spinner in the bottom-right.
-- **Branding Replacement**: The original Among Us logo (main menu / loading screen / splash animation) is hidden and replaced with the mod wordmark.
+### ⚡ Performance
+
+All under **Other Features → Performance**, all **on by default** (turn them off if you prefer):
+
+- **Don't update dead players**: skips most `FixedUpdate` frames for **dead** players. This is the single biggest win in a full lobby.
+  A skip-count slider (2–300, default 60) controls how aggressively this is applied. Slight trade-off: dead players' overlays refresh a little slower.
+- **Low load mode**: round-robin player updates — only one player is fully updated per frame while the rest are skipped. Only engages above 8 players; the local player and the host are never skipped.
+- **Hide console window**: hides the black BepInEx console window at startup.
+- A **per-second update scheduler** distributes the mod's own periodic work across frames instead of running it all in one frame, which removes the periodic frame-time spikes.
+
+### 🚀 Splash Screen & Rebranding
+
+- **Update check on startup**: the splash screen first checks for a mod update, showing "Checking for mod updates";
+  there are three outcomes — network error (amber), outdated (red), up to date (green) — switched with a **fade**; the main menu is only entered **after the check completes** (with a 12-second hard timeout so it can never hang)
+- **Splash screen**: replaced with the mod's own wordmark plus "Starting game" and a spinner in the bottom-right; the vanilla startup sound is muted
+- **Loading hint**: during match loading (host and client alike) the bottom-right shows "Setting up your game" with a spinner
+- **Rebranding**: the vanilla Among Us logos (main menu / loading screen / splash animation) are hidden and replaced with the mod's wordmark
+
 ### 🔍 Mod Client Detection
 
-- Identifies and marks other compatible mod clients in the room
+- Detects and marks other compatible mod clients in the room
 
 ### 🎨 Personalization
 
-- Multi-language: Chinese / English / Русский
-- Adjustable UI theme and scale, can block telemetry/crash reporting
+- Languages: Chinese / English / Русский
+- Adjustable UI theme and scale; telemetry/crash reporting can be disabled
 
 ---
 
 ## Hotkeys
 
-| Key | Function |
-|:---:|:-----|
+| Key | Action |
+|:---:|:-------|
 | `Insert` | Open / close the main menu |
 | `F2` | Show / hide recap info (lobby only) |
 | `F6` | Copy the current lobby code |
 
-> Keys can be changed in the `BepInEx/config/` config file (`Keys.MenuKey` / `Keys.RecapKey` / `Keys.CopyCodeKey`).
+> Hotkeys can be changed in the `BepInEx/config/` file (`Keys.MenuKey` / `Keys.RecapKey` / `Keys.CopyCodeKey`).
 
 ---
 
 ## Installation
 
-> Amethyst requires the **BepInEx (IL2CPP, Windows x64)** runtime.
+> Amethyst requires **BepInEx (IL2CPP, Windows x64)**.
 
 1. Download and install **BepInEx BleedingEdge — IL2CPP (`win-x64`)**
-2. Locate the Among Us installation directory:
-   - **Steam**: Library → right-click Among Us → Manage → Browse Local Files
-   - **Epic**: Library → Among Us → Manage, usually at `C:\Program Files\Epic Games\AmongUs`
-3. Extract BepInEx into the game directory (same level as `Among Us.exe`)
-4. Launch the game once to the main menu, then close it (this creates the `BepInEx/plugins` directory)
-5. Place **`Amethyst_v1.0.8.dll`** into `BepInEx/plugins/`
+2. Locate your Among Us install folder:
+   - **Steam**: Library → right-click Among Us → Manage → Browse local files
+   - **Epic**: Library → Among Us → Manage, usually `C:\Program Files\Epic Games\AmongUs`
+3. Extract BepInEx into the game folder (next to `Among Us.exe`)
+4. Launch the game once to the main menu, then close it (this creates the `BepInEx/plugins` folder)
+5. Put **`Amethyst_v1.0.9.dll`** into `BepInEx/plugins/`
 6. Launch the game and press `Insert` to open the menu
 
-> The first launch generates the config file in `BepInEx/config/`; delete the corresponding `.cfg` to reset settings.
+> The first launch creates the config files under `BepInEx/config/`; delete the matching `.cfg` to reset your settings.
 
 ---
 
-## Anti-Cheat Notes
+## Anti-Cheat Notices
 
-When anti-cheat triggers, a notification pops up and the configured action is taken (warn/kick/ban). Common detections include but are not limited to:
+An anti-cheat hit raises a notification and applies the configured action (warn/kick/ban). Common detections include, but are not limited to:
 
 | Category | Description |
-|:-----|:-----|
-| Crewmate Kill | A Crewmate role performing a kill |
-| Impostor Kills Impostor | An Impostor killing a teammate |
-| Dead Player Kill | A dead player performing a kill |
-| Repeatedly Killing Dead Players | Repeatedly killing already-dead targets |
-| Crewmate Sabotage / Off-Map Sabotage | A Crewmate or an illegal position initiating a sabotage |
-| Rapid Sabotage | Consecutive sabotages on different systems within a very short time |
-| Venting / Sabotaging / Closing Doors During Meetings | Impossible actions during meetings |
-| Unauthorized Venting / Forged Vent ID | Venting without permission or using a forged vent ID |
-| Venting on Behalf of Others | Forcing others into/out of vents |
-| Vent-Kick Exploit | vent-kick exploit usage |
-| Forced Zipline | Forced zipline usage |
-| Known Cheat Menu Signatures | Detected RPC signatures of known cheat menus |
-| H&S Report/Sabotage/Door Close/Illegal Vent | Hide & Seek mode anomalies |
-| Lobby Game RPC | Forged kill/meeting/shapeshift and other match RPCs before the game starts |
-| RPC Flood | High-frequency RPC spamming from a single client |
+|:---------|:------------|
+| Crewmate kill | A crewmate role initiating a kill |
+| Impostor kills impostor | An impostor killing a teammate |
+| Dead player kills | A dead player initiating a kill |
+| Repeatedly killing a dead player | Killing an already-dead target over and over |
+| Crewmate / off-map sabotage | A crewmate, or sabotage from an illegal position |
+| Rapid sabotage | Sabotaging different systems in quick succession |
+| Venting / sabotaging / closing doors in a meeting | Impossible behaviour during a meeting |
+| Venting without permission / forged vent ID | Venting without the right, or with a fake vent ID |
+| Venting on another player's behalf | Forcing another player into/out of a vent |
+| Vent-kick exploit | Exploiting the vent-kick bug |
+| Forced zipline | Forced zipline usage |
+| Known cheat menu signatures | RPC signatures of known cheat menus |
+| H&S report / sabotage / doors / illegal vent | Hide & Seek anomalies |
+| Lobby game RPCs | Fake match RPCs (kills, meetings, shapeshifts) before the match starts |
+| RPC flood | A single client spamming RPCs |
 
 ---
 
-## Building from Source
+## Building From Source
 
-Requires Among Us game assembly references (`Assembly-CSharp.dll`, etc.). The project points to the game's unpacked reference directory via `GameRefsDir`.
+You need Among Us assembly references (`Assembly-CSharp.dll` and friends). The project points at an extracted reference folder via `GameRefsDir`.
 
 ```
 dotnet build src/Amethyst.csproj -c Release
 ```
 
-The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.0.8.dll`).
+The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.0.9.dll`).
+
+On a **Release** build the DLL is also **deployed automatically** into the game's `BepInEx/plugins/` folder, so you can rebuild and simply restart the game. The target directory can be overridden:
+
+```
+dotnet build src/Amethyst.csproj -c Release -p:DeployDir="D:\Steam\...\BepInEx\plugins\"
+```
+
+Deployment is skipped (with a warning) if the directory is missing or the game is running, and it never fails the build. Your `config` files are never touched.
 
 ---
 
 ## Changelog
+
+### v1.0.9
+
+- **New — Role colors**: every vanilla role is now rendered in its own color (palette ported from EndlessHostRoles), applied to the intro role-assignment screen, the overhead role name, meetings, chat and the role-info panel. A startup self-check reports any role that has no dedicated color.
+- **New — Role info panel rewritten**: the panel now shows your role plus its **short flavour line and detailed rules**, and it no longer jitters. It is created once and fully owns its own `Update` (the previous version fought the game's own position writes every frame, which caused the trembling).
+- **New — Per-role descriptions**: all 14 vanilla roles have a flavour line and a rules text, **fully localized in Chinese, English and Russian**, ported from EndlessHostRoles. A startup self-check verifies all 3 languages × 14 roles are present.
+- **New — Task text color**: unfinished tasks are shown in yellow and finished ones in green instead of the game's dim grey.
+- **New — Task panel in meetings**: your task list stays visible during meetings, raised above the meeting UI (reference: AUnlocker).
+- **New — Performance section** (all on by default):
+  - **Don't update dead players** — skips most `FixedUpdate` frames for dead players (adjustable skip count, default 60)
+  - **Low load mode** — round-robin player updates, engaging above 8 players
+  - **Hide console window** — hides the black BepInEx console at startup
+  - **Per-second update scheduler** — spreads the mod's periodic work across frames to remove periodic frame-time spikes
+- **New — Server display**: the better ping display is now a three-part readout — **latency | FPS | server** — with the region name shown in full and localized per language, with no abbreviations.
+- **Fixed — Role info panel position** and the panel being invisible (the background scale was computed from stale/empty text bounds).
+- **Fixed — Intro role colors not appearing**: the patch now hooks the `ShowRole` coroutine's state machine (`_ShowRole_d__41.MoveNext`) instead of `CoBegin`/`CoShowIntro`, which the game never calls from managed code.
+- **Fixed — Raw rich-text markup leaking** (e.g. `<color=##FF4A62>` shown as literal text) caused by a double `#` in the colour value.
+- **Fixed — Task text colour patch silently failing to attach**, and a false "role has no colour" warning.
+- **Fixed — FPS counter reading ~3**: the frame counter had been placed behind a per-second throttle, so it sampled once per second instead of every frame.
+- **Fixed — Overlapping text** in the server readout caused by applying `<mspace>` (a monospace tag) to wide CJK glyphs.
+- **Fixed — Role info panel showing only one role** and no content: the body now shows your role and its description, with other players listed only when you are allowed to see them.
+- **Fixed — Localization loader**: text lookup is now case-insensitive, so `MENU`/`Menu`, `BAN`/`Ban` and `IMPORTTXT`/`ImportTxt` all resolve instead of sometimes showing the raw key.
+- Actions on the role-info panel, the UI-optimization toggles and the performance toggles now **default to on**; turn them off manually if you prefer.
+- Version 1.0.8 → **1.0.9**
+
 ### v1.0.8
-- Splash screen: Now checks for mod updates first (three results: network error / outdated / up to date, with fade transitions), and only allows entry to the main menu after the check completes;
-  "Starting Game" + spinner is persistently shown in the bottom-right; custom wordmark and purple stick figure are not applicable.
-- Splash screen text: During the loading phase, "Setting up your game" + spinner is shown in the bottom-right.
-- UI Improvements: Added a "Mouse Hover Buttons Turn Theme Color" toggle (global effect, covering all interactive buttons).
-- Loading screen: The original Among Us logo is replaced with the mod wordmark; the loading bar uses the original color scheme.
-- Main menu improvements: Hidden the friends list background panel; removed theme switching, fixed to #A06EFF.
-- Role Tags: Fixed "panel obscured by meeting nameplates after a death" (nameplates are temporarily hidden while the panel is open, restored on close).
+
+- Splash screen: now checks for a mod update first (network error / outdated / up to date, switched with a fade) and only enters the main menu once the check completes; "Starting game" with a spinner is always shown in the bottom-right; custom wordmark and the purple crewmate are not applicable.
+- Splash screen text: during loading the bottom-right shows "Setting up your game" with a spinner.
+- UI optimization: added a "hover buttons in theme color" toggle (applies globally to every interactive button).
+- Loading screen: the vanilla Among Us logo is replaced with the mod's wordmark; the loading bar keeps its vanilla colors.
+- Main menu optimization: hides the friend-list backdrop; theme switching removed and fixed to #A06EFF.
+- Role tag: fixed the "panel hidden behind meeting nameplates after a death" issue (nameplates are temporarily hidden while the panel is open and restored on close).
 
 ### v1.0.7
 
-- **Added Home Info**: A new independent card **"More Info"** on the home page (**System** (including architecture) / **Game Version** / **BepInEx Version** / **Number of Loaded Mods**); the "About" card keeps only the mod's own version and author
-- **Independent Mod Notifications**: Anti-cheat / protection / management / mod detection notifications now use **the mod's own notification cards** (top of screen, no longer occupying the original bottom-left notification bar)
-- **Added Startup Loading Screen**: Takes over the loading screen on game launch, with the mod wordmark (custom icon) + breathing glow + version number in the center, and "Starting Game" with a spinner ring in the bottom-right
-- **Mod Notification Beautification**: Plain-text cards (**no player color rendering**), fade in/out fully synced with the card; player cosmetics are not shown
-- **Removed "Show Platform and Level"**: The mod no longer sends join/leave notices; normal player join/leave is entirely handled by the original notifications
-- **Frame Rate Unlock Now Adjustable**: The toggle is now "Unlock Frame Rate"; when enabled, you can slide (or tap arrows to fine-tune) to choose a frame rate cap between **60~240**, default 240; disabling returns to the original 60
-- **Theme Fixed**: Removed the theme color selector; the UI theme is forced to **#A06EFF** (the Violet color code from the original list)
-- **Added Main Menu Display Image**: Fill the main menu with your own prepared image (proportional cover, resolution-adaptive), and linked hiding of the original floating characters and white dots
-- **Added Snow Effect**: Snow in the main menu, independent toggle; no scaling, doesn't block buttons, brightness increased
-- **Added Skill Duration Decimal Display**: Besides cooldowns, skill **durations** are also shown with one decimal place
-- **Added Cheat RPC Detection** (referencing FinalSpectrum): Identifies known cheat menu RPC signatures and merges them into anti-cheat (default: warn only)
-- **Fixed Name Rendering**:
-  - Names above heads being erased and colors being wrong when a Shapeshifter transforms
-  - Names in the Shapeshifter menu not colored by player color
-  - **The local player's own** name turning red after transforming (now the name color is forced to follow body color)
-- **Fixed Mushroom Mixup Sabotage**: Names were not hidden and name colors not rendered during sabotage in Freeplay mode; now names are hidden during sabotage and automatically restored when it ends
-- **Fixed Map Loading Progress for Room Members**: When a room member (not host), the progress bar was stuck at 30% "Generating Map" (the game only provides real loading progress on the host side); now it smoothly advances to about 68% and then waits for the map to be ready
-- **Fixed Main Menu Slide-In Animation**: No animation when clicking "Credits" then "Start"; also fixed a frame drop caused by a per-frame `GameObject.Find`
-- **Fixed Meeting Role Tag Panel**: Obscured by meeting nameplates, most cell characters disappearing, semi-transparent borders; panel size set to 1.1x
-- **Fixed Ping / Frame Rate Display**: Moved to the topmost layer, position and letter spacing adjusted
-- **Removed "Other Mod Detection"** feature (after testing, confirmed insufficient stability; removed entirely as requested)
+- **New — Home info**: a dedicated **"More info"** card on the home page (**System** (incl. architecture) / **Game version** / **BepInEx version** / **loaded mod count**); the "About" card keeps only the mod's own version and author
+- **Mod notifications are now independent**: anti-cheat / protection / management / mod-detection notifications use the **mod's own notification card** (top of the screen) instead of the game's bottom-left notification area
+- **New — startup loading screen**: takes over the loading screen with the mod's wordmark (hand-drawn icon) + breathing glow + version in the centre, and "Starting game" with a spinner ring in the bottom-right
+- **Notification polish**: plain-text cards (**no player colours rendered**), fading in and out in sync with the card; no player cosmetics shown
+- **Removed "show platform and level"**: the mod no longer posts its own join/leave notices; normal join/leave is handled entirely by the game's own notifications
+- **FPS unlock is now adjustable**: the switch became "Unlock FPS", and once enabled you can slide (or use the arrows) to pick a cap between **60 and 240**, default 240; turning it off returns to the vanilla 60
+- **Theme fixed**: the theme picker was removed and the UI theme is forced to **#A06EFF** (previously listed as Violet)
+- **New — main menu background image**: fills the main menu with your own image (aspect-fill, resolution-aware) and hides the vanilla floating characters and dots at the same time
+- **New — snow effect**: snow falls on the main menu, independently toggleable; it does not scale or cover buttons and is brighter
+- **New — ability duration decimals**: besides cooldowns, the ability **duration** is now shown with one decimal place
+- **New — cheat RPC detection** (reference: FinalSpectrum): recognises RPC signatures of known cheat menus and folds them into the anti-cheat (notify-only by default)
+- **Fixed — name rendering**:
+  - the overhead name being wiped out and miscoloured while a shapeshifter is shifted
+  - names in the shapeshifter menu not being coloured by player colour
+  - **the local player's own** name turning red after shifting (name colour now follows the body colour)
+- **Fixed — mushroom mixup sabotage**: names were not hidden and name colours were not rendered during the sabotage in freeplay; names are now hidden during it and restored afterwards
+- **Fixed — map loading progress as a room member**: the bar used to sit at 30% ("Generating map") forever because the game only reports real progress on the host; it now advances smoothly to about 68% and waits for the map to be ready
+- **Fixed — main menu slide-in animation**: no animation when clicking "Credits" first and then "Play"; also removed a per-frame `GameObject.Find` that caused frame drops
+- **Fixed — meeting role tag panel**: hidden behind meeting nameplates, most slots missing their character, semi-transparent border; the panel size is now 1.1×
+- **Fixed — latency / FPS display**: raised to the top layer, position and letter spacing adjusted
+- **Removed "other mod detection"** (stability proved insufficient after testing, removed entirely as requested)
 - Version 1.0.6 → **1.0.8**
 
 ### v1.0.6
 
-- **Added Meeting Role Tags**: In meetings, each player's avatar has an EditTag icon; clicking it opens the game's original "Shapeshifter Menu" to choose a role and tag that player;
-  Tags appear next to the meeting name and above the player's head in-game, **Impostor red / Crewmate blue**, Impostors first then Crewmates; a "Clear Tags" option is provided at the end of the list, and all tags are automatically cleared when the match ends
-- **Added Player History / Cheat History**: Forced on, file-only, never shown in any UI.
-  Records each player's name / friend code / PUID / platform / level, and supports **reading back history** by friend code
-- **Added Recap Info**: In the lobby, view last match's roles, kills / task progress, cause of death, and match result for each player
-- **Fixed Blank "Settings" Page in Mod Menu**: Sub-tab array index out of bounds caused the entire page to render nothing
-- **Fixed Several Recap Issues**: Disconnected players shown as "Alive", result faction possibly locked to the wrong faction, role lookup cache holding an empty table
-- **Fixed Force-Quit Players' Names Showing as TESTNAME**
-- **Fixed Main Menu Improvements**: Hidden effects being unexpectedly restored after opening settings
-- Removed the experimental "Settings Page Color Scheme" feature (after testing, confirmed unsatisfactory)
+- **New — meeting role tag**: each player has an EditTag icon next to their avatar in a meeting; click it to open the game's own shapeshifter menu, pick a role and mark that player;
+  the mark shows next to the meeting name and above the player's head in game, **impostors red / crewmates blue**, impostors listed first with crewmates after; a "clear tag" entry is at the end of the list and all tags are cleared when the match ends
+- **New — player history / cheat history**: always on, written to file only and never shown in any UI.
+  Records each player's name / friend code / PUID / platform / level and supports **reading history back** by friend code
+- **New — recap info**: in the lobby you can review each player's role, kills / task progress, cause of death and the match result from the previous game
+- **Fixed — blank "Settings" page in the mod menu**: a sub-tab array index went out of bounds, so the whole page rendered nothing
+- **Fixed — several recap issues**: disconnected players shown as "alive", the winning side sometimes locked to the wrong one, and the role lookup cache holding an empty table
+- **Fixed — players who left abruptly showing as TESTNAME**
+- **Fixed — main menu optimization**: the hidden effects were unintentionally restored after opening Settings
+- Removed the experimental "settings page colours" feature (tested and results were unsatisfactory)
 - Version 1.0.5 → **1.0.6**
 
 ### v1.0.5
 
-- **Added Main Menu Improvements** (merged into the "UI Improvements" master toggle): Streamlines cluttered main menu elements and keeps the Among Us logo
-- **Added Main Menu Slide-In Animation**: Clicking "Start / My Account / Credits" slides the right panel in from right to left;
-  opening Settings, Announcements, Inventory, or Shop automatically slides it out to avoid the panel blocking popups
-- **Fixed Main Menu "Settings" Not Opening**: The original `OptionsMenuBehaviour.Open()` throws a null reference causing the settings popup not to display; fields are now filled in and fallbacks added
-- **Fixed Meeting Opening Name Colors**: Fixed the reporter's and deceased's names not rendering in player colors on the "who died / who reported" intro screen;
-  the ejection (exile result) screen is no longer additionally colored, keeping the game's native look
-- **Cosmetic Saving / One-Click Switching**: 6 preset buttons provided on the inventory page
+- **New — main menu optimization** (merged into the "UI optimization" master switch): trims the main menu clutter while keeping the Among Us logo
+- **New — main menu slide-in animation**: clicking "Play / My Account / Credits" slides the right panel in from the right;
+  opening Settings, Announcements, Inventory or Shop slides it out so it no longer covers the popup
+- **Fixed — the main menu "Settings" button not opening**: the vanilla `OptionsMenuBehaviour.Open()` threw a null reference so the settings popup never appeared; fields are now filled in with a fallback
+- **Fixed — meeting intro name colours**: fixed the reporter's and the victim's names not being rendered in player colour on the "who died / who reported" intro screen;
+  the ejection (exile result) screen is no longer recoloured and keeps the game's native look
+- **Outfit saving / one-click switching**: 6 preset buttons on the inventory page
 - Version 1.0.4 → **1.0.5**
 
 ---
 
 ## Disclaimer
 
-Amethyst is an unofficial third-party modification mod for Among Us.
+Amethyst is an unofficial third-party modification for Among Us.
 
-This project is not affiliated with, sponsored by, or endorsed by Innersloth LLC in any way. Among Us and its related trademarks and assets belong to their respective owners.
+This mod is not affiliated with Among Us or Innersloth LLC, and the content contained therein is not endorsed or otherwise sponsored by Innersloth LLC. Portions of the materials contained herein are property of Innersloth LLC. © Innersloth LLC.
 
-Amethyst is intended for use in private rooms only.
+Amethyst is intended for use in private lobbies only.
 
-The software is provided "as is", without warranty of any kind. Installing or using it means you accept any consequences arising from it, including but not limited to account restrictions, bans, kicks, crashes, progress loss, file corruption, game instability, or incompatibility with future game updates. The developers are not responsible for any consequences, damages, or misuse arising from the use of this software.
+The software is provided "as is", without warranty of any kind. Installing or using it means you accept any consequences that follow, including but not limited to account restrictions, bans, kicks, crashes, progress loss, file corruption, game instability, or incompatibility with future game updates. The developer is not responsible for any consequences, damages or misuse arising from the use of this software.
 
 ---
 
 ## License
 
-This project is released under **GNU GPL v3.0** (see [LICENSE](LICENSE)). You are free to use, study, share, and modify it, but derivative works must use the same license.
+This project is released under the **GNU GPL v3.0** (see [LICENSE](LICENSE)). You are free to use, study, share and modify it, but derivative works must use the same license.
 
 ---
 
