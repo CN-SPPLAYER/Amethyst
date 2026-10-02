@@ -1,6 +1,6 @@
 <div align="center">
 
-# Amethyst v1.1.0
+# Amethyst v1.1.1
 
 **An Among Us anti-cheat and utility mod**
 
@@ -11,7 +11,7 @@ A BepInEx (IL2CPP) client-side mod for Among Us that provides RPC anti-cheat, pl
 <img src="https://img.shields.io/badge/Among%20Us-IL2CPP-000000?style=for-the-badge&logo=amongus&logoColor=white" alt="Among Us">
 <img src="https://img.shields.io/badge/BepInEx-6.x-5865F2?style=for-the-badge" alt="BepInEx">
 <img src="https://img.shields.io/badge/.NET-6.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET">
-<img src="https://img.shields.io/badge/version-1.1.0-9b59b6?style=for-the-badge" alt="version">
+<img src="https://img.shields.io/badge/version-1.1.1-9b59b6?style=for-the-badge" alt="version">
 <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge&logo=gnu&logoColor=white" alt="License">
 
 </div>
@@ -80,11 +80,18 @@ Amethyst (紫晶) is an Among Us anti-cheat mod for private lobbies. It detects 
 
 ### 📋 Recap Info
 
-- Press `F2` in the lobby to open a draggable **recap window** showing, for every player in the **previous match**:
+- A draggable **recap window** showing, for every player in the **previous match**:
   role (alive `=>` dead), kill count / task progress, cause of death (killed with the killer listed / ejected / disconnected / died / survived) and the match result
 - One-click copy as plain text
-- **Lobby only** — showing other players' roles during a match would be cheating, so it is never displayed in-game
-- **Open behavior**: the window is **closed by default** and only opens when you press `F2`, except that it opens **automatically once on the post-match screen**. The open/closed state is not saved, so entering a lobby always starts closed. Closing it on the post-match screen keeps it closed.
+- **New — toggle button**: a **Show/Hide recap info** button sits in the top-left corner of the screen. Use it or the `F2` hotkey to show/hide the window
+- **New — lobby and post-match**: available both in the lobby and on the post-match screen (it no longer opens automatically; it starts hidden)
+- While alive during a match it stays hidden — showing other players' roles mid-match would be cheating
+
+### 🏆 Winner Role Reveal
+
+- On the post-match screen, the **winning players' roles** are shown **under their names** on the result avatars
+- The winning lineup comes from the game's own cached winners, and roles are recovered from the mod's in-match snapshot, so it works across the end-screen scene change
+- Toggleable independently under **Other Features → UI Optimization**
 
 ### 🎮 Role Colors
 
@@ -101,7 +108,6 @@ Every **vanilla role** is rendered in its own color instead of the flat impostor
 | Detective | `#625EEE` | | Judge | `#F8D85A` |
 | Spirit Guide (Influencer) | `#FF0066` | | | |
 
-- The palette is ported from [EndlessHostRoles](https://github.com/Gurge44/EndlessHostRoles) (`RoleHtmlColors`, vanilla section)
 - Applied to the **role-assignment screen** (the intro "You Are" text), the **overhead role name**, meetings, chat, and the role-info panel
 - Any role added by a future game update automatically falls back to its team color, and a startup self-check reports any role that has no dedicated color
 
@@ -126,7 +132,7 @@ set individually under **Other Features → UI Optimization**:
   the mark appears **next to the meeting name** and **above the player's head in game**. Impostors are listed first in red, crewmates after them in blue, with a "clear tag" entry at the end.
   All tags are cleared automatically when the match ends (local only — only you can see them; your own slot shows no icon)
 - **Recap info**: press `F2` in the lobby to review the previous match (see "Recap Info" above)
-- **Task panel in meetings**: keeps your task list visible during meetings, raised above the meeting UI (reference: AUnlocker)
+- **Task panel in meetings**: keeps your task list visible during meetings, raised above the meeting UI
 - Force-show the start button, skip the kill animation
 - Display improvements: better ping / cooldown display, sabotage cooldown display
 - **Better ping display**: a three-part readout — **latency | FPS | server**
@@ -150,13 +156,9 @@ All under **Other Features → Performance**, all **on by default** (turn them o
 - **Hide console window**: hides the black BepInEx console window at startup.
 - A **per-second update scheduler** distributes the mod's own periodic work across frames instead of running it all in one frame, which removes the periodic frame-time spikes.
 
-### 🚀 Splash Screen & Rebranding
+### 🚀 Startup & Update Check
 
-- **Update check on startup**: the splash screen first checks for a mod update, showing "Checking for mod updates";
-  there are three outcomes — network error (amber), outdated (red), up to date (green) — switched with a **fade**; the main menu is only entered **after the check completes** (with a 12-second hard timeout so it can never hang)
-- **Splash screen**: replaced with the mod's own wordmark plus "Starting game" and a spinner in the bottom-right; the vanilla startup sound is muted
-- **Loading hint**: during match loading (host and client alike) the bottom-right shows "Setting up your game" with a spinner
-- **Rebranding**: the vanilla Among Us logos (main menu / loading screen / splash animation) are hidden and replaced with the mod's wordmark
+- **Update check on startup**: the mod checks for a newer version in the background and, if one is available, shows an "update available" hint in the mod menu. The check never blocks or delays the game's normal startup.
 
 ### 🔍 Mod Client Detection
 
@@ -174,7 +176,7 @@ All under **Other Features → Performance**, all **on by default** (turn them o
 | Key | Action |
 |:---:|:-------|
 | `Insert` | Open / close the main menu |
-| `F2` | Show / hide recap info (lobby only) |
+| `F2` | Show / hide recap info (lobby and post-match) |
 | `F6` | Copy the current lobby code |
 
 > Hotkeys can be changed in the `BepInEx/config/` file (`Keys.MenuKey` / `Keys.RecapKey` / `Keys.CopyCodeKey`).
@@ -191,7 +193,7 @@ All under **Other Features → Performance**, all **on by default** (turn them o
    - **Epic**: Library → Among Us → Manage, usually `C:\Program Files\Epic Games\AmongUs`
 3. Extract BepInEx into the game folder (next to `Among Us.exe`)
 4. Launch the game once to the main menu, then close it (this creates the `BepInEx/plugins` folder)
-5. Put **`Amethyst_v1.1.0.dll`** into `BepInEx/plugins/`
+5. Put **`Amethyst_v1.1.1.dll`** into `BepInEx/plugins/`
 6. Launch the game and press `Insert` to open the menu
 
 > The first launch creates the config files under `BepInEx/config/`; delete the matching `.cfg` to reset your settings.
@@ -229,43 +231,48 @@ You need Among Us assembly references (`Assembly-CSharp.dll` and friends). The p
 dotnet build src/Amethyst.csproj -c Release
 ```
 
-The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.1.0.dll`).
-
-On a **Release** build the DLL is also **deployed automatically** into the game's `BepInEx/plugins/` folder, so you can rebuild and simply restart the game. The target directory can be overridden:
-
-```
-dotnet build src/Amethyst.csproj -c Release -p:DeployDir="D:\Steam\...\BepInEx\plugins\"
-```
-
-Deployment is skipped (with a warning) if the directory is missing or the game is running, and it never fails the build. Your `config` files are never touched.
+The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.1.1.dll`).
 
 ---
 
 ## Changelog
 
+### v1.1.1
+
+- **Fixed — names and colour-blind text losing their colour in the lobby**: after the game rebuilt a player's text, the mod still believed it had already written the colour and never re-applied it, so many players' names and colour names showed up plain. The write path now compares the text that is actually on screen, matching the reference implementation.
+- **Fixed — colour-blind text not showing at all**: the colour name is now also force-displayed when the option is on, instead of only rewording a text object the game kept hidden.
+- **New — winner role reveal on the post-match screen**: the winning players' roles are shown under their names on the result avatars (toggleable under **Other Features → UI Optimization**).
+- **Changed — recap window**: it no longer opens automatically. A **Show/Hide recap info** button in the top-left corner toggles it, and it is available both in the lobby and on the post-match screen; `F2` still works.
+- **Changed — in-game role info panel**: hidden in Hide & Seek (where it is not useful) and shown normally in Classic.
+- **Changed — main menu**: the left menu panel is scaled to 0.7 to match the reference layout; the version line is pinned to the bottom-left, is not affected by UI scaling, and now reads **platform · version · update date · ♥ Amethyst v… by xiaozi ♥** with a left-to-right shine on the mod name.
+- **Fixed — Find Game buttons**: the Refresh and Back buttons used a mix of the original blue and the theme purple; their background, hover, selected and text colours are now consistent.
+- **Fixed — main menu friend-request badge**: the background, number and highlight were all tinted the same colour; they now use a purple background, white number and a soft highlight.
+- **Changed — main menu art**: the displayed image was replaced.
+- Version 1.1.0 → **1.1.1**
+
 ### v1.1.0
 
-- **New — Influencer / Spirit Guide (网红) support**: the crewmate ghost role added in game v19.0 is now fully covered — its own colour, localized name, flavour line and rules text. It is also correctly excluded from the role-tag picker and from the "see everyone's role after death" whitelist, because it can send messages to living crewmates.
-  Ghost-role detection now uses the game's own `RoleManager.IsGhostRole` instead of a hard-coded list, so ghost roles added by future game updates are handled automatically (same approach as BetterAmongUs).
-- **Fixed — Hide & Seek protections did not actually drop the RPC**: reporting a body / calling an emergency meeting in H&S, and a seeker venting, only raised a notice. They now drop the packet like every other detection and honour the "drop RPC" switch.
-- **Fixed — H&S sabotage could be bypassed**: the check trusted the `actor` field carried inside the packet, so a cheater could name the host as the actor and walk straight through. Sabotage in H&S is now blocked regardless of the actor.
-- **Fixed — the role info panel overlapped the task panel in Hide & Seek** (and while playing an impostor in a normal match). "Is this a task mode" is now decided from the **game mode** rather than "does the local player have tasks", matching EndlessHostRoles. In H&S the panel is additionally nudged **140 px** further down; normal matches are left untouched.
-- **Fixed — your role was shown twice**: the vanilla task panel appends a `role name + hint + blurb` block, which duplicated the role info panel. That block is now stripped (the same thing EndlessHostRoles does).
+- **New — Influencer / Spirit Guide support**: the crewmate ghost role added in game v19.0 is now fully covered, with its own colour, localized name, flavour line and rules text. It is correctly excluded from the role-tag picker and from the "see everyone's role after death" list. Ghost roles are detected from the game itself, so roles added by future game updates are picked up automatically.
+- **Fixed — a crash when opening the meeting role tag**: opening the role-tag picker during a meeting could throw a null reference inside the meeting UI and crash the game. The picker is now stable.
+- **Fixed — Hide & Seek protections did not actually drop the RPC**: reporting a body, calling a meeting and a seeker venting only raised a notice; they now drop the packet like every other detection.
+- **Fixed — Hide & Seek sabotage could be bypassed**: sabotage is now blocked regardless of who the packet claims the actor is.
+- **Fixed — the role info panel overlapped the task panel** in Hide & Seek and while playing an impostor. Task-mode detection now uses the game mode, and in H&S the panel is moved further down.
+- **Fixed — your role was shown twice**: the duplicate role block in the task panel is removed.
 - **Removed — task text recolouring**: the task panel now uses the game's own colours. Only role-name colouring remains.
-- **Removed — the "Host" tab**: it is replaced by a **Developer** tab holding the **performance probe** and **no-win-conditions**.
-- **Fixed — no-win-conditions did nothing in some game modes**: it blocked only the normal-flow end check. It now blocks all three end-of-game paths — the normal flow, the Hide & Seek flow and the "all tasks completed" win.
-- **Fixed — role descriptions**: the Crewmate text no longer mentions a neutral faction or crewmate kills (neither exists in the vanilla game — crewmates only ever remove impostors by voting), and the Judge text now says you eject **a player** (and that you are ejected instead if it turns out to be a crewmate).
-- **Fixed — the deploy script never verified the copy**: it used `Get-FileHash`, which is not available inside MSBuild's host process, so every automatic deploy silently skipped the size/hash check. It now uses .NET SHA-256 and reports the result.
+- **Removed — the "Host" tab**: replaced by a **Developer** tab holding the performance probe and no-win-conditions.
+- **Fixed — no-win-conditions did nothing in some game modes**: it now blocks all three end-of-game paths (normal, Hide & Seek and the "all tasks completed" win).
+- **Fixed — role descriptions**: the Crewmate and Judge texts were corrected.
+- **Removed — startup splash screen and rebranding**: the game now starts normally, and the update check runs quietly in the background.
 - Credits: **海王星Neptune** added to the donor list.
 - Version 1.0.9 → **1.1.0**
 
 ### v1.0.9
 
-- **New — Role colors**: every vanilla role is now rendered in its own color (palette ported from EndlessHostRoles), applied to the intro role-assignment screen, the overhead role name, meetings, chat and the role-info panel. A startup self-check reports any role that has no dedicated color.
+- **New — Role colors**: every vanilla role is now rendered in its own color, applied to the intro role-assignment screen, the overhead role name, meetings, chat and the role-info panel. A startup self-check reports any role that has no dedicated color.
 - **New — Role info panel rewritten**: the panel now shows your role plus its **short flavour line and detailed rules**, and it no longer jitters. It is created once and fully owns its own `Update` (the previous version fought the game's own position writes every frame, which caused the trembling).
-- **New — Per-role descriptions**: all 14 vanilla roles have a flavour line and a rules text, **fully localized in Chinese, English and Russian**, ported from EndlessHostRoles. A startup self-check verifies all 3 languages × 14 roles are present.
+- **New — Per-role descriptions**: all 14 vanilla roles have a flavour line and a rules text, **fully localized in Chinese, English and Russian**. A startup self-check verifies all 3 languages × 14 roles are present.
 - **New — Task text color**: unfinished tasks are shown in yellow and finished ones in green instead of the game's dim grey.
-- **New — Task panel in meetings**: your task list stays visible during meetings, raised above the meeting UI (reference: AUnlocker).
+- **New — Task panel in meetings**: your task list stays visible during meetings, raised above the meeting UI.
 - **Performance rewrite — per-player work is now staggered**: this is the fix for the mod feeling heavy, and for the performance toggles appearing to do nothing. Previously five or six components each walked every player **every frame** in `LateUpdate`, reading native fields (`pc.Data.PlayerName`, `pc.cosmetics.nameText`, `shapeshiftTargetPlayerId`, `CurrentOutfit`, …) and — worst of all — reading `TMP.text`, which **allocates a managed string on every read**. A 10-player lobby meant dozens of cross-IL2CPP calls and dozens of string allocations per frame, so the GC spiked every few seconds.
   There is now a single **player snapshot cache** refreshed every frame for global state and **staggered per player over 20 frames** (only ~n/20 players are read on any given frame). Name colours, colour-blind names, overhead role tags, meeting role text and mod-client tags all consume that snapshot, so their per-frame loops are pure managed comparisons that write to TMP only when a value actually changes.
   - Overhead role tags no longer rebuild their rich text or read `TMP.text` every frame; the text is built in the staggered pass.
@@ -311,7 +318,7 @@ Deployment is skipped (with a warning) if the directory is missing or the game i
 - **New — main menu background image**: fills the main menu with your own image (aspect-fill, resolution-aware) and hides the vanilla floating characters and dots at the same time
 - **New — snow effect**: snow falls on the main menu, independently toggleable; it does not scale or cover buttons and is brighter
 - **New — ability duration decimals**: besides cooldowns, the ability **duration** is now shown with one decimal place
-- **New — cheat RPC detection** (reference: FinalSpectrum): recognises RPC signatures of known cheat menus and folds them into the anti-cheat (notify-only by default)
+- **New — cheat RPC detection**: recognises RPC signatures of known cheat menus and folds them into the anti-cheat (notify-only by default)
 - **Fixed — name rendering**:
   - the overhead name being wiped out and miscoloured while a shapeshifter is shifted
   - names in the shapeshifter menu not being coloured by player colour
