@@ -1,6 +1,6 @@
 <div align="center">
 
-# Amethyst v1.1.1
+# Amethyst v1.1.2
 
 **An Among Us anti-cheat and utility mod**
 
@@ -135,7 +135,7 @@ set individually under **Other Features → UI Optimization**:
 - **Task panel in meetings**: keeps your task list visible during meetings, raised above the meeting UI
 - Force-show the start button, skip the kill animation
 - Display improvements: better ping / cooldown display, sabotage cooldown display
-- **Better ping display**: a three-part readout — **latency | FPS | server**
+- **Better ping display**: an in-game readout with **selectable items** — latency, FPS, server/region, **room code + (players/max players)** and **host name**. Turn each one on or off under **Other Features → Cooldown & Ping Display**; unselected items are simply not shown
 - **Server display**: shows which region/server you are on, localized per language (e.g. "Asia" / 「亚洲」 / «Азия»), with no abbreviations
 - **Room info**: Find Game lists up to 10 lobbies in a scrollable list (scrolls **one whole row at a time**, so rows can never be drawn outside the list area), each row showing host name / platform / room code
 - **Color name display**: shows each player's color name near them
@@ -193,7 +193,7 @@ All under **Other Features → Performance**, all **on by default** (turn them o
    - **Epic**: Library → Among Us → Manage, usually `C:\Program Files\Epic Games\AmongUs`
 3. Extract BepInEx into the game folder (next to `Among Us.exe`)
 4. Launch the game once to the main menu, then close it (this creates the `BepInEx/plugins` folder)
-5. Put **`Amethyst_v1.1.1.dll`** into `BepInEx/plugins/`
+5. Put **`Amethyst_v1.1.2.dll`** into `BepInEx/plugins/`
 6. Launch the game and press `Insert` to open the menu
 
 > The first launch creates the config files under `BepInEx/config/`; delete the matching `.cfg` to reset your settings.
@@ -231,23 +231,48 @@ You need Among Us assembly references (`Assembly-CSharp.dll` and friends). The p
 dotnet build src/Amethyst.csproj -c Release
 ```
 
-The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.1.1.dll`).
+The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.1.2.dll`).
 
 ---
 
 ## Changelog
 
+### v1.1.2
+
+- **Main Menu Link Buttons (EHR Style)**: Added GitHub and QQ Group link buttons on the main menu styled after EndlessHostRoles 8.0.2 (`MainMenuManagerPatch`), complete with custom colors, hover states, clipboard copying, browser open, and toast notifications.
+- **Main Menu Links Toggle**: Added an independent switch under `Visuals / Main Menu` (`MainMenuButtons`) to toggle the main menu GitHub and QQ Group buttons on or off at any time.
+- **Enhanced F6 Room Info Copy**: Optimized F6 shortcut to copy multi-line room information formatted as:
+  ```
+  Room Code + (Current/Max Players)
+  Host: HostName
+  Server: ServerName
+  ```
+- **Multilingual Support for Server & Main Menu**: Expanded 3-language localizations (`zh_CN`, `en_US`, `ru_RU`) for main menu buttons, toast notifications, and dynamic server region names in the ping display.
+
 ### v1.1.1
 
 - **Fixed — names and colour-blind text losing their colour in the lobby**: after the game rebuilt a player's text, the mod still believed it had already written the colour and never re-applied it, so many players' names and colour names showed up plain. The write path now compares the text that is actually on screen, matching the reference implementation.
-- **Fixed — colour-blind text not showing at all**: the colour name is now also force-displayed when the option is on, instead of only rewording a text object the game kept hidden.
 - **New — winner role reveal on the post-match screen**: the winning players' roles are shown under their names on the result avatars (toggleable under **Other Features → UI Optimization**).
 - **Changed — recap window**: it no longer opens automatically. A **Show/Hide recap info** button in the top-left corner toggles it, and it is available both in the lobby and on the post-match screen; `F2` still works.
+- **Fixed — dead players kept their overhead role tag**: the alive role label was still generated for a player after they died, so it stayed above their body; it is now cleared on death.
+- **New — your own name is always visible, and everyone's after you die**: the local player's name is force-shown even in modes that hide names (e.g. Hide & Seek). Once you are dead, every player's name is force-shown too; before that, other players' names still follow the game's setting.
+- **New — Developer: role assignment algorithm**: a cycle option that reshuffles the player list before the game assigns roles, using the selected random algorithm (Default / System / Xorshift / Mersenne Twister). Host only; Default leaves the game unchanged.
+- **New — Developer: impostors below the minimum player count**: when enabled, after the game's own role assignment the host checks whether an impostor exists and, if not, promotes a random player to impostor. The vanilla assignment still runs (so the intro is not delayed), and it works in Hide & Seek as well.
+- **New — role assignment algorithm applies to Hide & Seek too**: the chosen random algorithm also shuffles the Hide & Seek role assignment.
+- **Fixed — Hide & Seek seeker had no transformation**: the extra seeker is now assigned during the game's own role-selection step (like the reference mod), so the normal seeker animation and form play.
+- **Fixed — impostors moved without animation on other screens**: the guard dropped impostors' `PlayAnimation` RPCs, so on maps like The Fungle other players saw an impostor riding a zipline as a plain sliding/teleporting figure. The check is removed (the reference mod's `PlayAnimation` handler is empty too).
+- **Fixed — winner roles showing under the wrong player**: the end-screen avatars were matched before the game had written their names (they were all `???`), so roles could be attached to the wrong person. The reveal now waits until the names are ready and matches by name, falling back to order only if needed.
+- **Fixed — safer extra impostor**: a player who disconnected while loading is never promoted, avoiding a black screen.
+- **Changed — ping display room/host**: in a local game the room shows **Local** instead of `?`; the room code uses the theme colour, the player ratio is green when more than one player is present and red otherwise, and the host name is drawn in the host's own colour.
+- **Changed — colour snipe UI**: the colour chooser now has **◂ / ▸** arrows so you can step forward and back instead of only cycling forward and overshooting.
 - **Changed — in-game role info panel**: hidden in Hide & Seek (where it is not useful) and shown normally in Classic.
-- **Changed — main menu**: the left menu panel is scaled to 0.7 to match the reference layout; the version line is pinned to the bottom-left, is not affected by UI scaling, and now reads **platform · version · update date · ♥ Amethyst v… by xiaozi ♥** with a left-to-right shine on the mod name.
+- **Changed — main menu**: the version line now reads **platform · version · update date · ♥ Amethyst v… by xiaozi ♥** with a left-to-right shine on the mod name; its scale is fixed to 1 and its position is left to the game.
 - **Fixed — Find Game buttons**: the Refresh and Back buttons used a mix of the original blue and the theme purple; their background, hover, selected and text colours are now consistent.
+- **Fixed — incomplete room info in Find Game**: per-row info is now written on `GameContainer.SetupGameInfo` (like the reference mods), so every room shows the host name / platform / room code, with `Unknown` fallbacks for missing data.
+- **Fixed — tearing / stutter at 60 FPS**: when the FPS unlock is off, vertical sync is now enabled (it had been forced off), which removes the tearing at 60 Hz; enabling the FPS unlock still turns v-sync off so higher caps work.
 - **Fixed — main menu friend-request badge**: the background, number and highlight were all tinted the same colour; they now use a purple background, white number and a soft highlight.
 - **Changed — main menu art**: the displayed image was replaced.
+- **New — compatibility handling**: the mod now detects a **duplicate Amethyst assembly** (e.g. an old hotfix DLL next to the current one) and warns you to keep only one; it swallows the repeated `NullReferenceException` from ModExplorer's `ModManager.LateUpdate` (which otherwise spams the log and can crash); and when a same-purpose plugin is installed (BetterPingDisplay / BetterCooldownDisplay / Sabotage Cooldown Display / OutfitSaver / ForceShowStart / Unlock All Skins / FPS & Network Optimizer) the corresponding Amethyst feature steps aside so the two do not fight.
 - Version 1.1.0 → **1.1.1**
 
 ### v1.1.0
