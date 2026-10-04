@@ -1,7 +1,7 @@
 <div align="center">
 
 # Amethyst v1.1.3
-![Uploading image.png…]()
+![Uploading d775916d6ada8995bc97655354dc7338.png…]()
 
 **An Among Us anti-cheat and utility mod**
 
