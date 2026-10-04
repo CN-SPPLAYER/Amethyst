@@ -1,6 +1,6 @@
 <div align="center">
 
-# Amethyst v1.1.2
+# Amethyst v1.1.3
 
 **An Among Us anti-cheat and utility mod**
 
@@ -11,7 +11,7 @@ A BepInEx (IL2CPP) client-side mod for Among Us that provides RPC anti-cheat, pl
 <img src="https://img.shields.io/badge/Among%20Us-IL2CPP-000000?style=for-the-badge&logo=amongus&logoColor=white" alt="Among Us">
 <img src="https://img.shields.io/badge/BepInEx-6.x-5865F2?style=for-the-badge" alt="BepInEx">
 <img src="https://img.shields.io/badge/.NET-6.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET">
-<img src="https://img.shields.io/badge/version-1.1.1-9b59b6?style=for-the-badge" alt="version">
+<img src="https://img.shields.io/badge/version-1.1.3-9b59b6?style=for-the-badge" alt="version">
 <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge&logo=gnu&logoColor=white" alt="License">
 
 </div>
@@ -193,7 +193,7 @@ All under **Other Features → Performance**, all **on by default** (turn them o
    - **Epic**: Library → Among Us → Manage, usually `C:\Program Files\Epic Games\AmongUs`
 3. Extract BepInEx into the game folder (next to `Among Us.exe`)
 4. Launch the game once to the main menu, then close it (this creates the `BepInEx/plugins` folder)
-5. Put **`Amethyst_v1.1.2.dll`** into `BepInEx/plugins/`
+5. Put **`Amethyst_v1.1.3.dll`** into `BepInEx/plugins/`
 6. Launch the game and press `Insert` to open the menu
 
 > The first launch creates the config files under `BepInEx/config/`; delete the matching `.cfg` to reset your settings.
@@ -231,11 +231,28 @@ You need Among Us assembly references (`Assembly-CSharp.dll` and friends). The p
 dotnet build src/Amethyst.csproj -c Release
 ```
 
-The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.1.2.dll`).
+The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.1.3.dll`).
 
 ---
 
 ## Changelog
+
+### v1.1.3
+
+- **Anti-Cheat: Host TempBanAll Exploit Protection & Detection**:
+  - Added dedicated protection against host `TempBanAll` exploits (spamming `StartGame` packets within 0.05s).
+  - Split into two independent toggles under the anti-cheat tab:
+    - **Prevent host temporary account ban exploit** (`BypassDisconnectPenalty`): Automatically suppresses rapid malicious `CoStartGame` coroutines and clears disconnect ban points (`PlayerBanData.BanPoints = 0f`), keeping the client in the room without lag or temporary ban penalty. Default: ON.
+    - **Host temporary account ban exploit detection** (`DetectHostTempBan`): Alerts the player with a dedicated high-priority warning toast when an attack occurs. Default: ON.
+  - Exploit toast notification duration extended to **10 seconds** to ensure high visibility.
+- **Unified Toast Notification Durations**:
+  - Regular toasts (clipboard copy, room code copy, ban import, etc.) standardized to **3.0 seconds**.
+  - All standard anti-cheat alerts (impossible RPC, flood detection, mod client detection, out-of-bounds teleport, early meetings, etc.) standardized to **5.0 seconds**.
+  - Toast display duration limit widened from 8s to 15s to support longer-duration security notices.
+- **Removed Feature**:
+  - Removed "Force impostors below minimum players" (`ForceImpostorLowCount`) and related patches (`AmethystForceImpostorSelectPatch`, `AmethystHnsForceSeekerPatch`) for cleaner role management and game stability.
+- **UI & Layout Optimizations**:
+  - Re-anchored anti-cheat card heights and dynamic expansion logic to prevent card overflow, text clipping, and unclickable toggles.
 
 ### v1.1.2
 
