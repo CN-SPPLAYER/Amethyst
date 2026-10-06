@@ -1,6 +1,6 @@
 <div align="center">
 
-# Amethyst v1.1.3
+# Amethyst v1.1.4
 <img width="1602" height="898" alt="d775916d6ada8995bc97655354dc7338" src="https://github.com/user-attachments/assets/1d7ba60f-5f79-494d-a9ab-a22461f07588" />
 
 **An Among Us anti-cheat and utility mod**
@@ -12,7 +12,7 @@ A BepInEx (IL2CPP) client-side mod for Among Us that provides RPC anti-cheat, pl
 <img src="https://img.shields.io/badge/Among%20Us-IL2CPP-000000?style=for-the-badge&logo=amongus&logoColor=white" alt="Among Us">
 <img src="https://img.shields.io/badge/BepInEx-6.x-5865F2?style=for-the-badge" alt="BepInEx">
 <img src="https://img.shields.io/badge/.NET-6.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET">
-<img src="https://img.shields.io/badge/version-1.1.3-9b59b6?style=for-the-badge" alt="version">
+<img src="https://img.shields.io/badge/version-1.1.4-9b59b6?style=for-the-badge" alt="version">
 <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge&logo=gnu&logoColor=white" alt="License">
 
 </div>
@@ -45,7 +45,6 @@ Amethyst (紫晶) is an Among Us anti-cheat mod for private lobbies. It detects 
 - **Anti force-vent / anti vent-eject**: blocks forced passthrough and ejection aimed at your client
 - **Vent-kick exploit protection**: as host, punishes the client that sends the exploit packet
 - **Anti forced zipline**: blocks forced zipline rides aimed at your client
-- **Anti-cheat server bypass**: uses DTLS to bypass the server-side RPC anti-cheat for non-host actions, making local blocking far more reliable
 
 ### 🕵 Player Management
 
@@ -59,10 +58,8 @@ Amethyst (紫晶) is an Among Us anti-cheat mod for private lobbies. It detects 
 
 ### 🌊 Network Protection
 
-- Drops forced position teleports aimed at your client
 - Drops oversized GameData packets to prevent large-message crashes/overload
 - Drops GameData sub-messages with an invalid/malformed type
-- Hardens PackedUInt deserialization against malformed fixed-length integers
 - Guards VotingComplete against an oversized voter array (allocation overload)
 - **Spawn flood protection**: trims a flood of spawns in a single frame to prevent freezes/crashes
 
@@ -129,6 +126,7 @@ set individually under **Other Features → UI Optimization**:
 
 - **Main menu optimization**: trims the clutter (background noise, left panel fill and dividers, window highlights, full-screen tint, friend-request badge) while **keeping the Among Us logo**
 - **Main menu slide-in**: clicking "Play / My Account / Credits" slides the right panel in from the right; opening Settings, Announcements, Inventory or Shop slides it out so it no longer covers the popup
+- **Main menu link buttons**: three buttons at the bottom-left of the main menu — **GitHub**, **QQ Group** and **Report Cheater** — all built from the same template so they look identical. **Report Cheater** opens the cheat-report page **`api2.elauk.top/acban/submit`** in your browser, copies the link to the clipboard as a fallback and shows a toast. All three are hidden together with the `Other.MainMenuButtons` toggle
 - **Meeting role tag**: in a meeting each player has an `EditTag` icon next to their avatar. Click it to open the game's own shapeshifter menu and mark that player with a role;
   the mark appears **next to the meeting name** and **above the player's head in game**. Impostors are listed first in red, crewmates after them in blue, with a "clear tag" entry at the end.
   All tags are cleared automatically when the match ends (local only — only you can see them; your own slot shows no icon)
@@ -194,7 +192,7 @@ All under **Other Features → Performance**, all **on by default** (turn them o
    - **Epic**: Library → Among Us → Manage, usually `C:\Program Files\Epic Games\AmongUs`
 3. Extract BepInEx into the game folder (next to `Among Us.exe`)
 4. Launch the game once to the main menu, then close it (this creates the `BepInEx/plugins` folder)
-5. Put **`Amethyst_v1.1.3.dll`** into `BepInEx/plugins/`
+5. Put **`Amethyst_v1.1.4.dll`** into `BepInEx/plugins/`
 6. Launch the game and press `Insert` to open the menu
 
 > The first launch creates the config files under `BepInEx/config/`; delete the matching `.cfg` to reset your settings.
@@ -232,11 +230,23 @@ You need Among Us assembly references (`Assembly-CSharp.dll` and friends). The p
 dotnet build src/Amethyst.csproj -c Release
 ```
 
-The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.1.3.dll`).
+The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.1.4.dll`).
 
 ---
 
 ## Changelog
+
+### v1.1.4
+
+- **New — Report Cheater button on the main menu**: a third link button now sits to the **right of the QQ Group button** (bottom-left of the main menu), built from the same template as the GitHub and QQ Group buttons so all three look identical. Clicking it opens the cheat-report page **`api2.elauk.top/acban/submit`** in your browser, copies the link to the clipboard as a fallback and shows a toast. Its label is fully localized (中文 / English / Русский) and it follows the same `Other.MainMenuButtons` toggle as the other two.
+- **Removed — three protections.** The patches, their config entries, their menu switches and their localization keys are all gone:
+  - **Block server-forced position updates** (`Guard.BlockServerTeleports`) — the `SnapTo` RPC aimed at your own client is no longer dropped.
+  - **Hardened PackedUInt parsing** (`Guard.HardenPackedUInt`) — the mod no longer substitutes its own `MessageReader.ReadPackedUInt32`; the game's own implementation is used for every read again.
+  - **Force DTLS connection** (`Guard.ForceDtls`) — the client no longer forces `InnerNetClient.SetEndpoint(dtls: true)`.
+  - Untouched: the other two network-protection toggles (oversized GameData packets, invalid GameData type), the VotingComplete overload guard, and the vent/zipline protections.
+- **Cleanup**: the card heights of the affected settings cards were recomputed so no empty space is left where the removed rows used to be.
+- > Upgrading? The three removed keys stay behind in an existing `BepInEx/config/amethyst.mod.cfg` as orphans. They are ignored and safe to delete by hand.
+- Version 1.1.3 → **1.1.4**
 
 ### v1.1.3
 
