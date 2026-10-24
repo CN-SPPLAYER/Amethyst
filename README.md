@@ -1,6 +1,6 @@
 <div align="center">
 
-# Amethyst v1.1.6
+# Amethyst v1.1.7
 <img width="1602" height="898" alt="d775916d6ada8995bc97655354dc7338" src="https://github.com/user-attachments/assets/1d7ba60f-5f79-494d-a9ab-a22461f07588" />
 
 **An Among Us anti-cheat and utility mod**
@@ -12,7 +12,7 @@ A BepInEx (IL2CPP) client-side mod for Among Us that provides RPC anti-cheat, pl
 <img src="https://img.shields.io/badge/Among%20Us-IL2CPP-000000?style=for-the-badge&logo=amongus&logoColor=white" alt="Among Us">
 <img src="https://img.shields.io/badge/BepInEx-6.x-5865F2?style=for-the-badge" alt="BepInEx">
 <img src="https://img.shields.io/badge/.NET-6.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET">
-<img src="https://img.shields.io/badge/version-1.1.6-9b59b6?style=for-the-badge" alt="version">
+<img src="https://img.shields.io/badge/version-1.1.7-9b59b6?style=for-the-badge" alt="version">
 <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge&logo=gnu&logoColor=white" alt="License">
 
 </div>
@@ -43,6 +43,7 @@ A BepInEx (IL2CPP) client-side mod for Among Us that provides RPC anti-cheat, pl
 - [Installation](#installation)
 - [Anti-Cheat Notices](#anti-cheat-notices)
 - [Building From Source](#building-from-source)
+- [Reference Code & Credits](#reference-code--credits)
 - [Disclaimer](#disclaimer)
 - [License](#license)
 
@@ -61,12 +62,19 @@ Amethyst (紫晶) is an Among Us anti-cheat mod for private lobbies. It detects 
 ### 🛡 Anti-Cheat
 
 - **RPC detection** — catches impossible RPCs: crewmate kills, crewmate sabotage, venting without permission, forged vent IDs, venting / sabotage / door-closing during meetings, sabotage outside the map, unauthorized shapeshift / vanish, and other role violations
+- **Report / vote validation** — rejects reports during a meeting, reports of yourself or of a living player, reports while dead or while inside a vent / on a ladder / platform / mid-shapeshift, and votes cast outside a meeting
+- **Host-authority RPCs** — as host, drops forged `SetRole` / `SetInfected` / `SetTasks` / `VotingComplete` / `SyncSettings` packets; these are only ever sent by the host, so receiving one means a client spoofed it
+- **Sabotage repair validation** — repairing lights / oxygen / reactor / comms is only accepted when the player is actually standing near the console (host-side, notify-only)
+- **Door-close limits** — door closing is dropped during meetings and exile, and a second close within 0.01 s is rejected (one-key close-all cheat)
 - **Kill detection** — impostor killing an impostor, a dead player initiating a kill, repeatedly killing an already-dead player
 - **RPC dropping** — as host, drops the flagged RPC packets so they never take effect
-- **Actions** — choose **None / Warn / Kick / Ban** for the cheater
-- **RPC flood detection** — detects a single client spamming RPCs
+- **Actions** — choose **None / Warn / Kick / Ban**, plus an **Error kick** tier that uses the game's own `ClientTimeout` rejection path
+- **RPC flood detection** — detects a single client spamming RPCs (threshold 25/s, notify-only)
 - **Early meeting blocking** — blocks meetings / reports during the first 15 seconds
 - **Fake lobby meeting blocking** — blocks spoofed meeting UI in the lobby
+- **No-impostor settlement** — if every impostor has left or died, the host ends the round instead of leaving the game on the black "no impostors" screen
+
+> Unknown RPC IDs are always allowed. Game updates and role mods introduce new IDs, and blocking them caused false positives.
 
 ### 🚪 Vent / Zipline Protection
 
@@ -146,11 +154,12 @@ This is the same `Amethyst` folder that holds the ban list, `PlayerHistory.txt` 
 **Features**
 
 - **Playlist** — every track in the folder, sorted by name; click any row to play it
-- **Transport** — previous / play-pause / next / stop, plus a **loop** toggle
-- **Volume slider** styled like the rest of the mod's menu (0–100%)
+- **Transport** — previous / play-pause / next / stop, plus a **repeat** button that cycles **single-track → playlist → play-once**
+- **Progress bar** — a themed seek bar with a time readout (click, or drag and **release**, to jump; the audio is only re-positioned on release, so dragging never stutters)
+- **Volume slider** with − / + fine-step buttons, styled like the rest of the mod's menu (0–100%)
 - **Refresh** — re-scans the folder, so files dropped in **while the game is running** appear immediately
-- **Remembers** both the window position (drag the title bar) and the volume between launches
-- **Auto-advance** to the next track when one finishes (with loop off)
+- **Remembers** both the window position (drag the title bar), the volume and the last repeat mode between launches
+- **Auto-advance** — plays the next track on finish; when repeat is **play-once**, the player stops after the last track
 - **Now playing line** always reads **`Now playing <track name>`** (or `Paused <track name>`), so you can see what is playing at a glance
 - **Mutes the game's own music** while the player is playing — both lobby music and main-menu music are silenced so they do not fight with your track, and restored as soon as you pause, stop, or turn the volume to zero. Independent toggle: **Settings → Lobby & room list → Mute game music while playing** (`Music.MuteGameMusic`, on by default). Ambient sound effects are deliberately **not** touched
 - Decoding runs on a background thread, so starting a large track does not freeze the game
@@ -210,7 +219,7 @@ Every feature in this group has its **own independent toggle**, set individually
 - **Main menu optimization** — trims the clutter (background noise, left panel fill and dividers, window highlights, full-screen tint, friend-request badge) while **keeping the Among Us logo**
 - **Main menu slide-in** — clicking "Play / My Account / Credits" slides the right panel in from the right; opening Settings, Announcements, Inventory or Shop slides it out so it no longer covers the popup
 - **Main menu link buttons** — three buttons at the bottom-left of the main menu (**GitHub**, **QQ Group** and **Report Cheater**), all built from the same template so they look identical. **Report Cheater** opens the cheat-report page **`api2.elauk.top/acban/submit`** in your browser, copies the link to the clipboard as a fallback and shows a toast. All three are hidden together with the `Other.MainMenuButtons` toggle
-- **Meeting role tag** — in a meeting each player has an `EditTag` icon next to their avatar. Click it to open the game's own shapeshifter menu and mark that player with a role; the mark appears **next to the meeting name** and **above the player's head in game**. Impostors are listed first in red, crewmates after them in blue, with a "clear tag" entry at the end. All tags are cleared automatically when the match ends (local only — only you can see them; your own slot shows no icon)
+- **Meeting role tag** — in a meeting each **living** player has an `EditTag` icon next to their avatar (dead players get no icon, and any mark they had is hidden). Click it to open the game's own shapeshifter menu and mark that player with a role; the mark appears **next to the meeting name** and **above the player's head in game**. Impostors are listed first in red, crewmates after them in blue, with a "clear tag" entry at the end. All tags are cleared automatically when the match ends (local only — only you can see them; your own slot shows no icon)
 - **Recap info** — press `F2` in the lobby to review the previous match (see [Recap Info](#-recap-info) above)
 - **Task panel in meetings** — keeps your task list visible during meetings, raised above the meeting UI
 - Force-show the start button, skip the kill animation
@@ -237,10 +246,14 @@ All under **Other Features → Performance**, all **on by default** (turn them o
 ### 🚀 Startup & Update Check
 
 - **Update check on startup** — the mod checks for a newer version in the background and, if one is available, shows an "update available" hint in the mod menu. The check never blocks or delays the game's normal startup
+- **Check Update button** — a button on the main menu, next to GitHub / QQ Group / Report Cheater. It reads the latest GitHub release, compares it with your version, and asks before doing anything
+- **In-app download and replace** — if you accept, the new DLL is downloaded, verified and swapped in place; restart the game to finish. Nothing is replaced unless the download passes the checksum, size and assembly-name checks, and a failed swap rolls back to the previous file
 
 ### 🔍 Mod Client Detection
 
 - Detects and marks other compatible mod clients in the room
+- Shows the detected client's **Amethyst version** above their head in the lobby — the format is `♥ Ame{version} <User> ♥` (e.g. `♥ Ame1.1.7 用户 ♥` in Chinese, `♥ Ame1.1.7 User ♥` in English). Your own tag shows your version too
+- The version travels in the same handshake that already identifies compatible clients, so it works without any extra traffic. Players on a build that does not announce a version still get the plain `♥ Ame User ♥` tag
 
 ### 🌐 Personalization
 
@@ -258,15 +271,15 @@ All under **Other Features → Performance**, all **on by default** (turn them o
 | `F6` | Copy the current room info |
 | `M` | Open / close the music player |
 
-**While the music player window is open**, these extra keys work:
+**While the music player window is open**, these extra keys work (all configurable under **Settings → Hotkeys**):
 
 | Key | Action |
 |:---:|:-------|
-| `[` | Previous track |
-| `]` | Next track |
-| `P` | Play / pause |
+| `[` / `MusicPrevKey` | Previous track |
+| `]` / `MusicNextKey` | Next track |
+| `P` / `MusicPlayPauseKey` | Play / pause |
 
-> Hotkeys can be changed in the mod menu under **Settings → Hotkeys** (click a key badge, press the new key; `Esc` cancels, right-click or the trash icon clears it), or in `BepInEx/config/amethyst.mod.cfg` (`Keys.MenuKey` / `Keys.RecapKey` / `Keys.CopyCodeKey` / `Keys.MusicKey`).
+> Hotkeys can be changed in the mod menu under **Settings → Hotkeys** (click a key badge, press the new key; `Esc` cancels, right-click or the trash icon clears it), or in `BepInEx/config/amethyst.mod.cfg` (`Keys.MenuKey` / `Keys.RecapKey` / `Keys.CopyCodeKey` / `Keys.MusicKey` / `Keys.MusicPrevKey` / `Keys.MusicNextKey` / `Keys.MusicPlayPauseKey`).
 
 ---
 
@@ -280,7 +293,7 @@ All under **Other Features → Performance**, all **on by default** (turn them o
    - **Epic**: Library → Among Us → Manage, usually `C:\Program Files\Epic Games\AmongUs`
 3. Extract BepInEx into the game folder (next to `Among Us.exe`)
 4. Launch the game once to the main menu, then close it (this creates the `BepInEx/plugins` folder)
-5. Put **`Amethyst_v1.1.6.dll`** into `BepInEx/plugins/`
+5. Put **`Amethyst_v1.1.7.dll`** into `BepInEx/plugins/`
 6. Launch the game and press `Insert` to open the menu
 
 > The first launch creates the config files under `BepInEx/config/`; delete the matching `.cfg` to reset your settings.
@@ -304,6 +317,10 @@ An anti-cheat hit raises a notification and applies the configured action (warn 
 | Venting on another player's behalf | Forcing another player into / out of a vent |
 | Vent-kick exploit | Exploiting the vent-kick bug |
 | Forced zipline | Forced zipline usage |
+| Report / vote abuse | Reporting during a meeting, reporting yourself or a living player, voting outside a meeting |
+| Forged host RPCs | Client-sent `SetRole` / `SetInfected` / `SetTasks` / `VotingComplete` / `SyncSettings` |
+| Repair from a distance | Repairing a sabotage without standing near the console |
+| Door spam | Closing more than one door within 0.01 s, or closing doors during a meeting |
 | H&S report / sabotage / doors / illegal vent | Hide & Seek anomalies |
 | Lobby game RPCs | Fake match RPCs (kills, meetings, shapeshifts) before the match starts |
 | RPC flood | A single client spamming RPCs |
@@ -318,7 +335,22 @@ You need Among Us assembly references (`Assembly-CSharp.dll` and friends). The p
 dotnet build src/Amethyst.csproj -c Release
 ```
 
-The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.1.6.dll`).
+The build output is `src/bin/Release/netcoreapp6.0/Amethyst.dll` (plus a versioned copy `Amethyst_v1.1.7.dll`).
+
+---
+
+## Reference Code & Credits
+
+Amethyst's anti-cheat rules, RPC handling and UI behaviour were written with reference to the following open-source Among Us projects. Credit goes to their authors — please support them:
+
+- **[BetterAmongUs](https://github.com/D1GQ/BetterAmongUs)** — RPC sender / net-object resolution and the overall anti-cheat structure
+- **[OnyxMenu](https://github.com/Veltrix-s/OnyxMenu)** — RPC guards, teleport and AFK guards, menu animation and layout
+- **[Hydra](https://github.com/MrDiamond64/Hydra)** — per-RPC validation, the `SendLateRejection` kick path, and the protection module layout
+- **[EndlessHostRoles](https://github.com/Gurge44/EndlessHostRoles)** — role colours, host tools and UI patches
+- **[SickoMenu](https://github.com/g0aty/SickoMenu)** — the SMAC anti-cheat rule set, used as a reference for rule coverage
+- **[BanMod](https://github.com/GiannBart/BanMod)** — exploit guards, the meeting black-screen guard and anti-cheat modules
+
+Each project remains the property of its respective author and is distributed under its own license. Amethyst does not bundle or redistribute their binaries.
 
 ---
 
