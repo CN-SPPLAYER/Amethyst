@@ -1,0 +1,285 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Amethyst</AssemblyName>
+    <RootNamespace>Amethyst</RootNamespace>
+    <TargetFramework>netcoreapp6.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <Version>1.1.7</Version>
+    <Company>一只屑小紫</Company>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Deterministic>true</Deterministic>
+    <AssemblyVersion>$(Version).0</AssemblyVersion>
+    <FileVersion>$(Version).0</FileVersion>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <!-- ===== 游戏参考程序集目录（第 187 轮更换）=====
+       ⚠ 不要再用 `Новая папка (2)\lib\`：那是**旧版**游戏（v18.x）的程序集，
+         它的 `RoleTypes` 枚举只有 14 个值，缺 `SpiritGuide`(=网红/Influencer)。
+         游戏已于 2026-09-29 更新到 **v19.0**，新增了该职业。
+         现在统一指向 `_refs\`，它是「BepInEx\interop\（当前游戏真实 API，121 个）」
+         + 「BepInEx\core\（interop 里缺的那几个：0Harmony / Il2CppInterop.Runtime /
+            BepInEx.Core / BepInEx.Unity.IL2CPP）」合并出来的，共 128 个。
+         见 docs\ANTICHEAT_FIX_NOTES.md 第 187 轮的刷新脚本。 -->
+  <PropertyGroup>
+    <GameRefsDir Condition="'$(GameRefsDir)'=='' and Exists('$(MSBuildThisFileDirectory)..\_refs\')">$(MSBuildThisFileDirectory)..\_refs\</GameRefsDir>
+    <GameRefsDir Condition="'$(GameRefsDir)'=='' and Exists('$(MSBuildThisFileDirectory)..\Новая папка (2)\lib\')">$(MSBuildThisFileDirectory)..\Новая папка (2)\lib\</GameRefsDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(GameRefsDir)Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(GameRefsDir)Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(GameRefsDir)0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx.Core">
+      <HintPath>$(GameRefsDir)BepInEx.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx.Unity.IL2CPP">
+      <HintPath>$(GameRefsDir)BepInEx.Unity.IL2CPP.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Hazel">
+      <HintPath>$(GameRefsDir)Hazel.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppInterop.Runtime">
+      <HintPath>$(GameRefsDir)Il2CppInterop.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2Cppmscorlib">
+      <HintPath>$(GameRefsDir)Il2Cppmscorlib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppSystem.Core">
+      <HintPath>$(GameRefsDir)Il2CppSystem.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppSystem">
+      <HintPath>$(GameRefsDir)Il2CppSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(GameRefsDir)Unity.TextMeshPro.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(GameRefsDir)UnityEngine.AudioModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameRefsDir)UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>$(GameRefsDir)UnityEngine.AnimationModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(GameRefsDir)UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(GameRefsDir)UnityEngine.ImageConversionModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(GameRefsDir)UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>$(GameRefsDir)UnityEngine.Physics2DModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(GameRefsDir)UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(GameRefsDir)UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(GameRefsDir)UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
+      <HintPath>$(GameRefsDir)UnityEngine.UnityWebRequestModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAudioModule">
+      <HintPath>$(GameRefsDir)UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityAnalyticsModule">
+      <HintPath>$(GameRefsDir)UnityEngine.UnityAnalyticsModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CrashReportingModule">
+      <HintPath>$(GameRefsDir)UnityEngine.CrashReportingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PerformanceReportingModule">
+      <HintPath>$(GameRefsDir)UnityEngine.PerformanceReportingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.ResourceManager">
+      <HintPath>$(GameRefsDir)Unity.ResourceManager.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.Addressables">
+      <HintPath>$(GameRefsDir)Unity.Addressables.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Rewired_Core">
+      <HintPath>$(GameRefsDir)Rewired_Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- ===== 音乐播放器解码依赖（NAudio / NVorbis）=====
+       ⚠ 为什么放弃 UnityWebRequestMultimedia.GetAudioClip：
+         游戏 IL2CPP 把 `DownloadHandlerAudioClip..ctor(String, AudioType)` 裁掉了，
+         运行时抛 MissingMethodException，永远拿不到 AudioClip
+         （表现为"加载很久" + 没声音）。所以改走手动解码 PCM。
+
+       为什么是「嵌入 + 运行时释放 + AssemblyResolve」而不是普通 PackageReference：
+         BepInEx/IL2CPP 不会自动解析模组旁的 NuGet 依赖，
+         直接 PackageReference 只在编译期可用，运行时抛 FileNotFoundException。
+
+       NAudio / NVorbis 均为 MIT 许可的第三方开源库（非本模组资产）：
+         · NAudio  — https://github.com/naudio/NAudio   (MIT, © Mark Heath)
+         · NVorbis — https://github.com/NVorbis/NVorbis (MIT, © Andrew Ward)
+       MIT 要求随分发保留版权与许可声明，因此 csproj 把两者的许可证全文
+       （Resources\Licenses\*.txt）也嵌入，运行时与 DLL 一起释放到 Amethyst\libs。 -->
+  <PropertyGroup>
+    <_NuGetBase>$(USERPROFILE)\.nuget\packages\</_NuGetBase>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="NVorbis" Version="0.10.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(_NuGetBase)naudio\2.2.1\lib\net6.0\NAudio.dll">
+      <LogicalName>Amethyst.libs.NAudio.dll</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(_NuGetBase)naudio.core\2.2.1\lib\netstandard2.0\NAudio.Core.dll">
+      <LogicalName>Amethyst.libs.NAudio.Core.dll</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(_NuGetBase)naudio.winmm\2.2.1\lib\netstandard2.0\NAudio.WinMM.dll">
+      <LogicalName>Amethyst.libs.NAudio.WinMM.dll</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(_NuGetBase)nvorbis\0.10.5\lib\netstandard2.0\NVorbis.dll">
+      <LogicalName>Amethyst.libs.NVorbis.dll</LogicalName>
+    </EmbeddedResource>
+
+    <!-- MIT 要求随分发保留版权与许可声明：许可证全文与依赖一起释放到 Amethyst\libs -->
+    <EmbeddedResource Include="Resources\Licenses\THIRD-PARTY-NOTICES.txt">
+      <LogicalName>Amethyst.libs.THIRD-PARTY-NOTICES.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Licenses\NAudio-LICENSE.txt">
+      <LogicalName>Amethyst.libs.NAudio-LICENSE.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Licenses\NVorbis-LICENSE.txt">
+      <LogicalName>Amethyst.libs.NVorbis-LICENSE.txt</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 第 259 轮：不再内嵌自定义字体（SmileySans-Oblique.ttf），统一使用游戏自带字体。 -->
+    <EmbeddedResource Include="Resources\DarkMode.ImageResource.DarkReport.png" LogicalName="Amethyst.Resources.DarkMode.ImageResource.DarkReport.png" />
+    <EmbeddedResource Include="Resources\DarkMode.ImageResource.DarkQuickChat.png" LogicalName="Amethyst.Resources.DarkMode.ImageResource.DarkQuickChat.png" />
+    <EmbeddedResource Include="Resources\DarkMode.ImageResource.DarkKeyboard.png" LogicalName="Amethyst.Resources.DarkMode.ImageResource.DarkKeyboard.png" />
+    <EmbeddedResource Include="Resources\DarkMode.ImageResource.AmogusBan.png" LogicalName="Amethyst.Resources.DarkMode.ImageResource.AmogusBan.png" />
+    <EmbeddedResource Include="Resources\ModStamp.png" LogicalName="Amethyst.Resources.ModStamp.png" />
+    <EmbeddedResource Include="Resources\EditTag.png" LogicalName="Amethyst.Resources.EditTag.png" />
+    <EmbeddedResource Include="Resources\AmethystLogo.png" LogicalName="Amethyst.Resources.AmethystLogo.png" />
+    <EmbeddedResource Include="Resources\MainMenuArt.png" LogicalName="Amethyst.Resources.MainMenuArt.png" />
+    <EmbeddedResource Include="Resources\MainMenuArt2.png" LogicalName="Amethyst.Resources.MainMenuArt2.png" />
+    <EmbeddedResource Include="Resources\MainMenuArt3.png" LogicalName="Amethyst.Resources.MainMenuArt3.png" />
+    <EmbeddedResource Include="Resources\Lang\en_US.json" LogicalName="Amethyst.Resources.Lang.en_US.json" />
+    <EmbeddedResource Include="Resources\Lang\ru_RU.json" LogicalName="Amethyst.Resources.Lang.ru_RU.json" />
+    <EmbeddedResource Include="Resources\Lang\zh_CN.json" LogicalName="Amethyst.Resources.Lang.zh_CN.json" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_NuGetBase>$(USERPROFILE)\.nuget\packages\</_NuGetBase>
+  </PropertyGroup>
+
+  <ItemGroup>
+  </ItemGroup>
+
+  <!-- ===== 版本化产物命名（第 277 轮）=====
+       统一命名：Amethyst_<版本>_Windows.dll / Amethyst_<版本>_Android.dll。
+       输出目录：
+         · dist\                 交付 / 上传用
+         · _backup_20260927\     历史归档
+       注意：插件目录里仍部署为 Amethyst.dll，避免升级后同 GUID 的旧版本并存。 -->
+  <Target Name="CopyVersionedDll" AfterTargets="Build" Condition="'$(Configuration)'=='Release'">
+    <MakeDir Directories="$(MSBuildThisFileDirectory)..\dist;$(MSBuildThisFileDirectory)..\_backup_20260927" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll"
+          DestinationFiles="$(OutputPath)$(AssemblyName)_$(Version)_Windows.dll"
+          ContinueOnError="true" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll"
+          DestinationFiles="$(MSBuildThisFileDirectory)..\dist\$(AssemblyName)_$(Version)_Windows.dll"
+          ContinueOnError="true" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll"
+          DestinationFiles="$(MSBuildThisFileDirectory)..\_backup_20260927\$(AssemblyName)_$(Version)_Windows.dll"
+          ContinueOnError="true" />
+  </Target>
+
+  <Target Name="GenerateVersionFile" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <VersionFile>$(IntermediateOutputPath)GeneratedVersion.cs</VersionFile>
+    </PropertyGroup>
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;&amp; '$(MSBuildThisFileDirectory)GenerateVersion.ps1' -Version '$(Version)' -OutFile '$(VersionFile)'&quot;" />
+    <ItemGroup>
+      <Compile Include="$(VersionFile)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- ===== 编译后自动部署到游戏目录（第 172 轮新增）=====
+       用途：`dotnet build -c Release` 之后自动把产物送进游戏的 BepInEx\plugins\，
+             省掉手工复制。
+
+       ⚠ 只部署到 **BepInEx\plugins\**（BepInEx 真正加载的位置）。
+         游戏目录下/`BepInEx\` 根目录里那些同名 Amethyst*.dll 是**历史遗留副本，不会被加载**，
+         往那儿写只会造成"到底哪个在生效"的混淆，所以本 Target 不碰它们。
+
+       ⚠ 不覆盖 config：BepInEx\config\amethyst.mod.cfg 保存着用户设置，绝不触碰
+         （新版本号会让 BepInEx 自己补新条目，删掉反而丢设置）。
+
+       路径优先级：命令行 -p:DeployDir=... > 环境变量 AMETHYST_DEPLOY_DIR > 下面的默认值。
+       找不到目录时只告警、**不让编译失败**（换机器/没装游戏也能正常 build）。
+       游戏正在运行时 DLL 会被占用，这里只告警并提示关掉游戏，不改用其它手段强写。 -->
+  <PropertyGroup>
+    <DeployDir Condition="'$(DeployDir)'=='' and '$(AMETHYST_DEPLOY_DIR)'!=''">$(AMETHYST_DEPLOY_DIR)</DeployDir>
+    <DeployDir Condition="'$(DeployDir)'==''">E:\steam\steamapps\common\Among Us\BepInEx\plugins\</DeployDir>
+  </PropertyGroup>
+
+  <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(Configuration)'=='Release'">
+    <PropertyGroup>
+      <_DeployDll>$(DeployDir)$(AssemblyName).dll</_DeployDll>
+    </PropertyGroup>
+
+    <Warning Condition="!Exists('$(DeployDir)')"
+             Text="部署跳过：找不到目录 '$(DeployDir)'。可用 -p:DeployDir=&quot;...\BepInEx\plugins\&quot; 指定。" />
+
+    <Exec Condition="Exists('$(DeployDir)')"
+          Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;&amp; '$(MSBuildThisFileDirectory)Deploy.ps1' -Source '$(OutputPath)$(AssemblyName).dll' -TargetDir '$(DeployDir)' -Version '$(Version)'&quot;" />
+  </Target>
+
+</Project>
