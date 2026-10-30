@@ -1,0 +1,76 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ===== Android / Starlight 专用编译工程（第 275 轮）=====
+       用途：用 `AmongUs.GameLibs.Android`（安卓版游戏程序集）编译同一份源码，
+             提前暴露「安卓版缺少某个方法/类型」这类差异。
+       产物：AnyCPU 的 Amethyst.dll，可直接放进 Starlight 的插件目录。
+
+       关键：GameLibs 里是 **hollowed**（去掉方法体、保留原始可见性）的参考程序集，
+             不能直接引用。必须由 `BepInEx.IL2CPP.MSBuild` 的
+             `GenerateInteropAssembliesTask` 还原成 interop 形态
+             （类型继承 Il2CppObjectBase、成员公开），与运行时 Starlight 一致。
+
+       注意：本工程与 `src/Amethyst.csproj` 共用源码，但**不共用** obj/bin，
+             因此不会破坏 Windows 构建。 -->
+
+  <PropertyGroup>
+    <AssemblyName>Amethyst</AssemblyName>
+    <RootNamespace>Amethyst</RootNamespace>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <Version>1.1.7</Version>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>$(DefineConstants);ANDROID</DefineConstants>
+    <GameRefsDir>..\_refs\</GameRefsDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\src\**\*.cs" Exclude="..\src\bin\**;..\src\obj\**" />
+    <Compile Include="VersionInfo.Android.cs" />
+  </ItemGroup>
+
+  <!-- 游戏程序集（hollowed）+ 负责还原成 interop 的 MSBuild 任务 -->
+  <ItemGroup>
+    <PackageReference Include="AmongUs.GameLibs.Android" Version="2026.9.29" />
+    <PackageReference Include="BepInEx.IL2CPP.MSBuild" Version="2.0.1">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Il2CppInterop.Common" Version="1.4.5" />
+    <PackageReference Include="Il2CppInterop.Generator" Version="1.4.5" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="NVorbis" Version="0.10.5" />
+  </ItemGroup>
+
+  <!-- BepInEx / Harmony / Il2CppInterop：与 PC 版公共 API 相同，运行时由 Starlight 提供。
+       这些同时作为 GenerateInteropAssembliesTask 的输入（@(ReferencePath)）。 -->
+  <ItemGroup>
+    <Reference Include="BepInEx.Core"><HintPath>$(GameRefsDir)BepInEx.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="BepInEx.Unity.IL2CPP"><HintPath>$(GameRefsDir)BepInEx.Unity.IL2CPP.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(GameRefsDir)0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(GameRefsDir)Il2CppInterop.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2Cppmscorlib"><HintPath>$(GameRefsDir)Il2Cppmscorlib.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppSystem"><HintPath>$(GameRefsDir)Il2CppSystem.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppSystem.Core"><HintPath>$(GameRefsDir)Il2CppSystem.Core.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <!-- 与 PC 工程一致的嵌入资源（图片 + 三语文本） -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\src\Resources\DarkMode.ImageResource.DarkReport.png" LogicalName="Amethyst.Resources.DarkMode.ImageResource.DarkReport.png" />
+    <EmbeddedResource Include="..\src\Resources\DarkMode.ImageResource.DarkQuickChat.png" LogicalName="Amethyst.Resources.DarkMode.ImageResource.DarkQuickChat.png" />
+    <EmbeddedResource Include="..\src\Resources\DarkMode.ImageResource.DarkKeyboard.png" LogicalName="Amethyst.Resources.DarkMode.ImageResource.DarkKeyboard.png" />
+    <EmbeddedResource Include="..\src\Resources\DarkMode.ImageResource.AmogusBan.png" LogicalName="Amethyst.Resources.DarkMode.ImageResource.AmogusBan.png" />
+    <EmbeddedResource Include="..\src\Resources\ModStamp.png" LogicalName="Amethyst.Resources.ModStamp.png" />
+    <EmbeddedResource Include="..\src\Resources\EditTag.png" LogicalName="Amethyst.Resources.EditTag.png" />
+    <EmbeddedResource Include="..\src\Resources\AmethystLogo.png" LogicalName="Amethyst.Resources.AmethystLogo.png" />
+    <EmbeddedResource Include="..\src\Resources\MainMenuArt.png" LogicalName="Amethyst.Resources.MainMenuArt.png" />
+    <EmbeddedResource Include="..\src\Resources\MainMenuArt2.png" LogicalName="Amethyst.Resources.MainMenuArt2.png" />
+    <EmbeddedResource Include="..\src\Resources\MainMenuArt3.png" LogicalName="Amethyst.Resources.MainMenuArt3.png" />
+    <EmbeddedResource Include="..\src\Resources\Lang\en_US.json" LogicalName="Amethyst.Resources.Lang.en_US.json" />
+    <EmbeddedResource Include="..\src\Resources\Lang\ru_RU.json" LogicalName="Amethyst.Resources.Lang.ru_RU.json" />
+    <EmbeddedResource Include="..\src\Resources\Lang\zh_CN.json" LogicalName="Amethyst.Resources.Lang.zh_CN.json" />
+  </ItemGroup>
+
+</Project>
