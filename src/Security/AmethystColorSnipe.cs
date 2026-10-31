@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace Amethyst;
 
-// 抢占颜色（参考 OnyxMenu 的颜色狙击）：仅在大厅、目标颜色空闲时自动抢占。
 public sealed class AmethystColorSnipe : MonoBehaviour
 {
     public AmethystColorSnipe(IntPtr ptr) : base(ptr) { }
 
     private float _next;
+    private int _petApplied = -1;
 
     internal static bool On => AmethystConfig.ColorSnipe != null && AmethystConfig.ColorSnipe.Value;
 
@@ -52,10 +52,26 @@ public sealed class AmethystColorSnipe : MonoBehaviour
             _next = Time.time + 0.25f;
 
             int want = Mathf.Clamp(AmethystConfig.ColorSnipeId != null ? AmethystConfig.ColorSnipeId.Value : 0, 0, Max());
-            if (me.Data.DefaultOutfit.ColorId == want) return;
             if (Taken(want, me)) return;
 
-            try { me.CmdCheckColor((byte)want); } catch { }
-    
+            if (me.Data.DefaultOutfit.ColorId != want)
+            {
+                try { me.CmdCheckColor((byte)want); } catch { }
+                _petApplied = -1;
+            }
+
+            if (_petApplied != want)
+            {
+                try
+                {
+                    PetBehaviour pet = me.GetPet();
+                    if (pet != null)
+                    {
+                        pet.SetCrewmateColor(want);
+                        _petApplied = want;
+                    }
+                }
+                catch { }
+            }
     }
 }

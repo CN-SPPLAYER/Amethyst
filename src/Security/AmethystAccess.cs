@@ -10,12 +10,7 @@ using UnityEngine;
 
 namespace Amethyst;
 
-internal sealed class AccessEntry
-{
-    internal string Name;
-    internal string Code;
-    internal string Puid;
-}
+
 
 internal static class AmethystAccess
 {
@@ -25,7 +20,7 @@ internal static class AmethystAccess
     private const float ActCooldown = 6f;
     private const float NotifyCooldown = 10f;
     private static readonly Dictionary<int, float> NotifiedAt = new Dictionary<int, float>();
-    // 第 253 轮：PUID-only 封禁遇到“该客户端没有 PUID”时，每个 clientId 只提示一次。
+    
     private static readonly HashSet<int> PuidMissingLogged = new HashSet<int>();
     private static bool OnNotifyCooldown(int id) => NotifiedAt.TryGetValue(id, out float t) && Time.realtimeSinceStartup - t < NotifyCooldown;
     private static void TouchNotify(int id) => NotifiedAt[id] = Time.realtimeSinceStartup;
@@ -44,7 +39,6 @@ internal static class AmethystAccess
 
         RefreshHeader(BanTxt, AmethystText.T("AmethystFormatNameFriendCodePUID"));
 
-        // 加载同目录下的云端封禁名单文件
         ImportFile(CloudBanTxt, CloudBans);
         RefreshHeader(CloudBanTxt, AmethystText.T("AmethystFormatNameFriendCodePUID"));
     }
@@ -60,8 +54,7 @@ internal static class AmethystAccess
             string name, code, puid;
             if (p.Length == 1)
             {
-                // 单列：32 位十六进制按 PUID 处理，其余一律按好友代码处理
-                // （主机平台的好友代码不一定带 '#'）。
+                
                 string v = p[0].Trim();
                 name = string.Empty;
                 bool isPuid = LooksLikePuid(v);
@@ -126,7 +119,6 @@ internal static class AmethystAccess
 
     private static string Esc(string s) => string.IsNullOrEmpty(s) ? string.Empty : s.Replace(';', ' ').Replace('|', ' ').Trim();
 
-    // EOS ProductUserId 固定为 32 位十六进制；用它区分“单列里写的是 PUID 还是好友代码”。
     private static bool LooksLikePuid(string s)
     {
         if (s == null || s.Length != 32) return false;
@@ -139,12 +131,6 @@ internal static class AmethystAccess
         return true;
     }
 
-    // 匹配优先级（第 253 轮）：
-    //   · 一条记录**有好友代码时，只按好友代码匹配**（好友代码优先，不再用 PUID 抢先命中）；
-    //   · 只有当记录没有好友代码（PUID-only）时，才按 PUID 匹配；
-    //   · 玩家好友代码为空时，允许用记录里的 PUID 兜底。
-    // 这样“好友代码 + PUID 都有”的记录不会因为 PUID 相同而绕开好友代码，
-    // 同时单独 PUID 的记录仍然有效。
     private static bool Has(List<AccessEntry> list, string code, string puid)
     {
         for (int i = 0; i < list.Count; i++)
@@ -155,7 +141,7 @@ internal static class AmethystAccess
             if (hasCode && !string.IsNullOrEmpty(code))
             {
                 if (string.Equals(e.Code, code, StringComparison.OrdinalIgnoreCase)) return true;
-                continue;   // 好友代码不一致：该记录按好友代码优先，不再用 PUID 兜底
+                continue;   
             }
 
             if (!string.IsNullOrEmpty(puid) && !string.IsNullOrEmpty(e.Puid)
@@ -200,13 +186,6 @@ internal static class AmethystAccess
 
     internal static void RemoveBan(string key) { EnsureLoaded(); if (RemoveByKey(Bans, key)) Persist(AmethystConfig.BanList, Bans, BanTxt); }
 
-    // 第 215 轮：云端名单允许在菜单里手动删除单条（与本地封禁名单的 ✕ 行为一致）。
-    //
-    // 云端名单**没有**对应的 ConfigEntry（数据只存在于 CloudBanList.txt），所以这里只写
-    // 该文件：删掉的条目立刻从内存列表消失，因此「进房判定 / 好友码检查」也马上不再命中。
-    //
-    // 注意语义：删除**只作用于本地**。下次点「获取云端封禁名单」会按服务器数据整体覆盖，
-    // 被删掉的条目只要服务器还在下发就会重新出现（与用户确认一致）。
     internal static void RemoveCloudBan(string key)
     {
         EnsureLoaded();
@@ -317,7 +296,6 @@ internal static class AmethystAccess
                         }
                     }
 
-                    // 计算对比当前本地 CloudBans 的新增与移除数量
                     for (int i = 0; i < newCloudList.Count; i++)
                     {
                         var e = newCloudList[i];
@@ -334,7 +312,6 @@ internal static class AmethystAccess
                     CloudBans.AddRange(newCloudList);
                     total = CloudBans.Count;
 
-                    // 写入同目录下的 CloudBanList.txt，保证与本地封禁名单处于同目录且互不冲突
                     WriteTxt(CloudBanTxt, CloudBans);
                     success = true;
                 }
@@ -377,7 +354,7 @@ internal static class AmethystAccess
                 string name, fc, puid;
                 if (p.Length == 1)
                 {
-                    // 单列导入：32 位十六进制视为 PUID，其余视为好友代码。
+                    
                     string v = p[0].Trim();
                     name = string.Empty;
                     if (LooksLikePuid(v)) { fc = string.Empty; puid = v; }
@@ -407,8 +384,6 @@ internal static class AmethystAccess
 
     private static MethodInfo _sendLateRejection;
 
-    // ErrorKick：已开局时用 SendLateRejection(ClientTimeout) 让客户端以“网络错误”退出，
-    // 而不是显示被房主踢出；未开局或反射失败时退回普通 Kick。
     internal static void ErrorKick(InnerNetClient net, int clientId, bool force = false)
     {
         try
@@ -443,16 +418,11 @@ internal static class AmethystAccess
 
     private static readonly Dictionary<int, int> ViolationCounts = new Dictionary<int, int>();
 
-    // bypassThreshold = true 时跳过 CheaterActionThreshold 计数门，立刻执行 Kick/Ban。
-    // 用于等级守卫等一次性即需即处罚的场景：参照 OnyxMenu 的 Act（其 Act 本身无阈值门），
-    // 阈值门只对反反作弊 RPC 滥报有效（需要累计 N 次才处罚），对等级守卫应立刻生效。
     internal static void Act(InnerNetClient net, int clientId, string action, string who, string reason, bool silentToast = false, bool bypassThreshold = false)
     {
         string whoShow = AmethystColors.Name(net, clientId) ?? who;
         string act = (action ?? "Null").Trim().ToLowerInvariant();
 
-        // 给 ShowNotification 用：需要**纯文本**的玩家名（游戏原生弹窗拿到的也是纯名）。
-        // `who` 可能带 <color=#hex> 标签（来自 Show(client)），在这里把标签去掉。
         string plainName = StripColor(whoShow);
 
         if (act == "kick" || act == "ban" || act == "errorkick")
@@ -468,14 +438,14 @@ internal static class AmethystAccess
 
                 if (currentCount < targetThreshold)
                 {
-                    // 尚未达到处罚次数门槛，仅作警告提醒
+                    
                     if (!silentToast) AmethystToast.Push(AmethystText.T("Protection"), AmethystText.T("Warned", whoShow, $"{reason} ({currentCount}/{targetThreshold})"), 5.0f, AmethystNotifyKind.Warning);
                     return;
                 }
             }
             else
             {
-                // 越过阈值门的路径（如等级守卫）：仍记录一次违规计数，便于历史查问，但立刻处罚。
+                
                 ViolationCounts.TryGetValue(clientId, out int cur);
                 ViolationCounts[clientId] = cur + 1;
             }
@@ -488,9 +458,7 @@ internal static class AmethystAccess
                 break;
             case "kick":
                 AmethystDisconnect.RecordAction(clientId, false, reason, plainName);
-                // bypassThreshold=true（如等级守卫）时用 force 绕过冷却：
-                // Enforce 已在调用 Act 之前 Touch 过一次以抑制 0.6s 轮询重复提示，
-                // 若这里仍走 OnCooldown 判断，Kick 会被刚设置的冷却挡掉 —— 正是「踢出无用」的根因。
+                
                 Kick(net, clientId, false, bypassThreshold);
                 if (!silentToast) AmethystToast.Push(AmethystText.T("Kick_2"), AmethystText.T("Kicked", whoShow, reason), 5.0f, AmethystNotifyKind.Warning);
                 break;
@@ -516,10 +484,8 @@ internal static class AmethystAccess
         AmethystToast.Push(AmethystText.T("BanList"), Show(c), 5.0f, AmethystNotifyKind.Danger);
     }
 
-    // 通知中显示带颜色的玩家名（按其在游戏中的颜色），无法取色时回退纯名。
     private static string Show(ClientData c) => AmethystColors.Name(c) ?? SafeName(c);
 
-    // 去掉富文本颜色标签，得到纯玩家名（用于与游戏原生 ShowNotification 的 playerName 匹配）。
     private static string StripColor(string s)
     {
         if (string.IsNullOrEmpty(s) || s.IndexOf('<') < 0) return (s ?? string.Empty).Trim();
@@ -633,8 +599,6 @@ internal static class AmethystAccess
             string puid = SafePuid(client);
             if (OnCooldown(client.Id)) return;
 
-            // PUID-only 封禁依赖客户端的 ProductUserId；为空的客户端只可能被好友代码命中。
-            // 每个 clientId 只记一次，避免 0.6s 轮询刷日志。
             try
             {
                 bool puidOnly = (AmethystConfig.AccessBanEnabled != null && AmethystConfig.AccessBanEnabled.Value && HasPuidOnly(Bans))
@@ -644,14 +608,6 @@ internal static class AmethystAccess
             }
             catch { }
 
-            // 严格校验（好友码格式 / 平台数据）：**硬编码为「仅提醒」**。
-            // 永远不踢出、不封禁，也没有开关（不提供选项、菜单里也不单独标明）。
-            //
-            // 历史问题：这两项此前是无开关、直接 Kick(..., ban: true) 的，
-            // 主机型（Xbox / Playstation / Switch）的好友码并非 "xxx#1234" 格式，
-            // 且 PC 平台名要求恰为 "TESTNAME"，一旦与当前游戏/平台不符就会**整房误封**；
-            // 又因进房初期好友码可能尚未下发（为空则跳过），表现为「过了一会儿突然一批人被踢」。
-            // 现固定为只提示。注意这里**不 return**：提示过后仍要继续走封禁名单等真正需要处罚的检查。
             if (AmethystConfig.InvalidFcGuard != null && AmethystConfig.InvalidFcGuard.Value
                 && !string.IsNullOrWhiteSpace(fc) && !IsValidFriendCode(fc)
                 && !OnNotifyCooldown(client.Id))
@@ -729,7 +685,6 @@ internal static class AmethystAccess
         return c != null ? SafeName(c) : "#" + clientId;
     }
 
-    // 平台标签（与 AmethystJoinDetector 的映射一致），供历史记录写入文件使用。
     internal static string PlatformOf(ClientData c)
     {
         try

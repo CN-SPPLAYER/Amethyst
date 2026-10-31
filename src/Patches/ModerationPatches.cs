@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using InnerNet;
 using UnityEngine;
 
@@ -49,7 +49,7 @@ internal static class MatchBanMenuVisibilityPatch
 
     public static void Postfix(BanMenu __instance, bool show)
     {
-        // Dark Mode for BanMenu
+        
         try
         {
             if (__instance != null && show)
@@ -60,7 +60,7 @@ internal static class MatchBanMenuVisibilityPatch
                     RestoreAll();
                     return;
                 }
-                // Darken background using custom AmogusBan texture
+                
                 Transform bgTrans = tr.Find("Background");
                 if (bgTrans != null)
                 {
@@ -79,7 +79,7 @@ internal static class MatchBanMenuVisibilityPatch
                         }
                     }
                 }
-                // Accent colors for Buttons
+                
                 if (__instance.BanButton != null)
                 {
                     PassiveButton pb = __instance.BanButton.GetComponent<PassiveButton>();
