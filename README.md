@@ -1,6 +1,6 @@
-﻿<div align="center">
+<div align="center">
 
-# Amethyst v1.1.7
+# Amethyst v1.1.8
 <img width="1602" height="898" alt="d775916d6ada8995bc97655354dc7338" src="https://github.com/user-attachments/assets/1d7ba60f-5f79-494d-a9ab-a22461f07588" />
 
 **一款《Among Us》反作弊与实用模组**
@@ -12,7 +12,7 @@
 <img src="https://img.shields.io/badge/Among%20Us-IL2CPP-000000?style=for-the-badge&logo=amongus&logoColor=white" alt="Among Us">
 <img src="https://img.shields.io/badge/BepInEx-6.x-5865F2?style=for-the-badge" alt="BepInEx">
 <img src="https://img.shields.io/badge/.NET-6.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET">
-<img src="https://img.shields.io/badge/version-1.1.7-9b59b6?style=for-the-badge" alt="version">
+<img src="https://img.shields.io/badge/version-1.1.8-9b59b6?style=for-the-badge" alt="version">
 <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge&logo=gnu&logoColor=white" alt="License">
 
 </div>
@@ -66,6 +66,13 @@ Amethyst的部分代码、UI以及部分资产取自以下开源Among Us项目�
 - [EndlessHostRoles](https://github.com/Gurge44/EndlessHostRoles)
 - [SickoMenu](https://github.com/g0aty/SickoMenu)
 - [BanMod](https://github.com/GiannBart/BanMod)
+- [MiraAPI](https://github.com/All-Of-Us-Mods/MiraAPI)
+- [TownofNext-Edited](https://github.com/qin-qwq/TownofNext-Edited)
+- [AUnlocker](https://github.com/astra1dev/AUnlocker)
+- [MalumMenu](https://github.com/scp222thj/MalumMenu)
+- [Reactor](https://github.com/NuclearPowered/Reactor)
+- [Nebula](https://github.com/Dolly1016/Nebula)
+- [FinalSuspect](https://github.com/Slok7565/FinalSuspect)
 
 ---
 
