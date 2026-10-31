@@ -3,9 +3,9 @@
 # Amethyst v1.1.8
 <img width="1602" height="898" alt="d775916d6ada8995bc97655354dc7338" src="https://github.com/user-attachments/assets/1d7ba60f-5f79-494d-a9ab-a22461f07588" />
 
-**一款《Among Us》反作弊与实用模组**
+**An anti-cheat and utility mod for Among Us**
 
-一个基于BepInEx(IL2CPP)的《Among Us》客户端整合模组，提供反作弊和游戏优化功能，推荐希望在自己的房间中避免被炸房的房主使用。
+A client-side integration mod for Among Us built upon BepInEx (IL2CPP), providing anti-cheat protection and game optimisation. It is intended for hosts who wish to prevent their lobbies from being disrupted by malicious players.
 
 <br>
 
@@ -19,46 +19,46 @@
 
 ---
 
-## 概述
+## Overview
 
-Amethyst是一款的《Among Us》反作弊以及优化模组。它通过检测玩家发出的异常RPC来防御外挂炸房，以及24+游戏优化小功能。
+Amethyst is an anti-cheat and optimisation mod for Among Us. It guards against attacks that crash the lobby by detecting anomalous RPCs issued by players, and it includes more than 24 minor quality-of-life features.
 
-> **注意：** Amethyst的反作弊依赖房主身份。如果你不是房主，那么大部分反作弊功能将失效。
-
----
-
-## 功能
-
-### 反作弊
-
-- **RPC检测** —— 捕获异常RPC
-- **异常RPC** —— 可选阻止或不阻止
-- **作弊者处理方式** —— 可选无/警告/错误踢出/踢出/封禁，注意，踢出和封禁可选触发反作弊达到多少次之后才执行
-
-### 玩家管理
-
-- **封禁列表** —— 按FriendCode/PUID在加入时踢出/封禁
-- **玩家历史** —— 每次加入房间或离开的玩家都将记录到此Amethyst/PlayerHistory.txt
-- **作弊历史** —— 每次触发反作弊的玩家都将记录到此Amethyst/CheatHistory.txt
+> **Note:** The anti-cheat capability of Amethyst depends on host authority. If you are not the host, the majority of the anti-cheat features will not take effect.
 
 ---
 
-## 热键
+## Features
 
-| 按键 | 操作 |
+### Anti-cheat
+
+- **RPC detection** — captures anomalous RPCs.
+- **Anomalous RPCs** — blocking may be enabled or disabled.
+- **Cheater response** — selectable between **None**, **Warn**, **Invalid kick**, **Kick** and **Ban**. For kick and ban, a threshold may be configured for the number of anti-cheat detections required before the action is applied.
+
+### Player management
+
+- **Ban list** — kicks or bans players upon joining, by Friend Code or PUID.
+- **Player history** — every player who joins or leaves the lobby is recorded to `Amethyst/PlayerHistory.txt`.
+- **Cheat history** — every player who triggers the anti-cheat is recorded to `Amethyst/CheatHistory.txt`.
+
+---
+
+## Hotkeys
+
+| Key | Action |
 |:---:|:-------|
-| `Insert` | 打开/关闭主菜单 |
-| `F2` | 显示/隐藏回顾信息 |
-| `F6` | 复制当前房间信息 |
-| `M` | 打开/关闭音乐播放器 |
+| `Insert` | Open or close the main menu |
+| `F2` | Show or hide recap information |
+| `F6` | Copy the current lobby information |
+| `M` | Open or close the music player |
 
-> 按键可以从模组设置中更改。
+> All hotkeys may be reassigned in the mod settings.
 
 ---
 
-## 参考代码与致谢
+## Referenced Code and Acknowledgements
 
-Amethyst的部分代码、UI以及部分资产取自以下开源Among Us项目。感谢其创作者，如果你的资产不想让我使用，请联系我，我将删除它。
+Portions of the code, user interface and assets of Amethyst are derived from the following open-source Among Us projects. Their authors are gratefully acknowledged. Should you not wish for your assets to be used, please contact me and they will be removed.
 
 - [BetterAmongUs](https://github.com/D1GQ/BetterAmongUs)
 - [OnyxMenu](https://github.com/Veltrix-s/OnyxMenu)
@@ -76,14 +76,14 @@ Amethyst的部分代码、UI以及部分资产取自以下开源Among Us项目�
 
 ---
 
-## 免责声明
+## Disclaimer
 
-本模组与Among Us或Innersloth LLC无关，其内容未经Innersloth LLC认可或赞助。本文所含材料的部分内容为Innersloth LLC的财产。© Innersloth LLC。
+This mod is not affiliated with Among Us or Innersloth LLC, and its content is neither endorsed nor sponsored by Innersloth LLC. Portions of the materials contained herein are the property of Innersloth LLC. © Innersloth LLC.
 
-本模组按“原样”提供，不附带任何形式的保证。安装或使用即表示你接受随之而来的一切后果，包括但不限于账户限制、封禁、踢出、崩溃、进度丢失、文件损坏、游戏不稳定或与未来游戏更新不兼容。开发者不对因使用本模组而产生的任何后果、损害或滥用负责。
+This mod is provided "as is", without warranty of any kind. Installation or use constitutes acceptance of all consequences arising therefrom, including but not limited to account restrictions, bans, kicks, crashes, loss of progress, file corruption, game instability, or incompatibility with future game updates. The developer accepts no responsibility for any consequence, damage or misuse arising from the use of this mod.
 
 ---
 
-## 许可证
+## License
 
-本项目基于**GNU GPL v3.0**发布（见[LICENSE](LICENSE)）。你可自由使用、研究、分享和修改，但衍生作品必须使用相同许可证。
+This project is released under the **GNU GPL v3.0** (see [LICENSE](LICENSE)). You are free to use, study, share and modify it, provided that derivative works are distributed under the same license.
