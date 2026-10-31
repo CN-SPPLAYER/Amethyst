@@ -1,10 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Amethyst.Patches;
 
-// 消除 UI 贴图自带的色相，再由 renderer 的主题色着色。
-// 保留透明度、明暗、九宫格边框与原始尺寸；结果按精灵缓存。
 internal static class AmethystUiSpriteTone
 {
     private static readonly Dictionary<int, Sprite> Sprites = new();

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using AmongUs.GameOptions;
 using BepInEx.Configuration;
 using HarmonyLib;
@@ -13,7 +13,6 @@ internal static class AmethystBetterPingState
 {
     internal static int CurrentFps = 60;
 
-    // 覆盖排序用的极高 sortingOrder —— 让这行字压在其它 UI 之上
     private const int TopSortingOrder = 32000;
 
     private static int _frames;
@@ -22,11 +21,6 @@ internal static class AmethystBetterPingState
     private static int _ping = -1;
     private static string _lastText;
 
-    // ⚠ 性能（第 162 轮）：这行字挂在 `PingTracker.Update` 的 Prefix 上（返回 false，完全接管原版），
-    //   **每帧**都会跑。原来每帧都要 new List<string> + 两次插值 + string.Join，
-    //   然后再拿去和 _lastText 比较 —— 比较发生在构建之后，等于每帧白分配一堆字符串。
-    //   现在先比"会变的东西"（ping / fps / 语言 / 屏幕上当前显示的是不是我们写的那串），
-    //   全都没变就直接返回，一个字符串都不拼。
     private static int _lastPing = int.MinValue;
     private static int _lastFps = int.MinValue;
     private static string _lastLang;
@@ -64,10 +58,7 @@ internal static class AmethystBetterPingState
                 int id = ap.GetInstanceID();
                 if (id != _aspectId) { _aspectId = id; _edge = ap.DistanceFromEdge; }
                 Vector3 want = _edge;
-                // ⚠ 方向说明（这里踩过一次坑，别再搞反）：
-                // 该显示锚在**底边**，`DistanceFromEdge.y` 是**离底边的距离** ——
-                // 所以乘数**越大越靠上**、越小越靠下。
-                // 上一轮把它减小到 0.55 想要「上移」，结果反而是下移；这里改成放大。
+                
                 want.y = _edge.y * 0.75f;
                 want.x = _edge.x + 0.12f;
                 if ((ap.DistanceFromEdge - want).sqrMagnitude > 1e-6f)
@@ -86,7 +77,6 @@ internal static class AmethystBetterPingState
             int fps = CurrentFps;
             TMP_Text target = tracker.text;
 
-            // 语言会影响下面两个标签的文案，所以它也参与"变没变"的判断。
             string lang = null;
             try { if (AmethystConfig.Language != null) lang = AmethystConfig.Language.Value; } catch { }
 
@@ -101,7 +91,6 @@ internal static class AmethystBetterPingState
 
             string server = showServer ? AmethystServerInfo.RegionName() : string.Empty;
 
-            // 会变的东西全都没变、而且屏幕上显示的正是我们上次写的那串 → 直接返回。
             if (_ping == _lastPing
                 && fps == _lastFps
                 && string.Equals(lang, _lastLang)
@@ -118,19 +107,15 @@ internal static class AmethystBetterPingState
             string fc = fps >= 55 ? "7FEC9A" : fps >= 30 ? "EDE87A" : fps >= 20 ? "F5A84A" : "F07070";
             string line2 = $"<color=#607888>{AmethystText.T("PingFps")}:</color><mspace=0.66em><b><color=#{fc}>{fps}</color></b></mspace><color=#607888>fps</color>";
 
-            // 服务器 / 区域（参考 EHR Utils.GetRegionName）。
-            // ⚠ 不要套 `<mspace=0.66em>`：文本值（中文/字母）会与等宽格重叠。
             string region = server;
             string line3 = string.IsNullOrEmpty(region)
                 ? string.Empty
                 : $"<color=#607888>{AmethystText.T("PingServer")}:</color><b><color=#9FD3FF>{region}</color></b>";
 
-            // 房间号（主题色）+（当前人数/总人数，按人数着色）；本地环境显示「本地」。
             string line4 = string.IsNullOrEmpty(room)
                 ? string.Empty
                 : $"<color=#607888>{AmethystText.T("PingRoom")}:</color>{room}";
 
-            // 房主名字（按房主本人颜色着色）
             string line5 = string.IsNullOrEmpty(host)
                 ? string.Empty
                 : $"<color=#607888>{AmethystText.T("PingHost")}:</color>{host}";
@@ -163,7 +148,6 @@ internal static class AmethystBetterPingState
 
     private const string Sep = "   <color=#3B4E5C>|</color>   ";
 
-    // 按启用情况拼装各项，未启用的直接不出现。
     private static string Join(string l1, string l2, string l3, string l4, string l5, bool showLatency, bool showFps)
     {
         var parts = new List<string>(5);
@@ -175,8 +159,6 @@ internal static class AmethystBetterPingState
         return string.Join(Sep, parts);
     }
 
-    // 房间：本地环境显示「本地」；线上显示 房号（主题色）+（当前人数/总人数）。
-    // 人数按人数着色：当前人数 > 1 绿色，<= 1 红色。
     private static string RoomInfo()
     {
         try
@@ -186,7 +168,6 @@ internal static class AmethystBetterPingState
 
             string accent = ColorUtility.ToHtmlStringRGB(AmethystStyle.Current.Accent);
 
-            // 本地环境：直接显示「本地」，不显示问号房号。
             if (net.NetworkMode != NetworkModes.OnlineGame)
                 return $"<b><color=#{accent}>{AmethystText.T("PingLocalRoom")}</color></b>";
 
@@ -211,7 +192,6 @@ internal static class AmethystBetterPingState
         catch { return string.Empty; }
     }
 
-    // 房主名字：按房主本人的颜色着色。
     private static string HostName()
     {
         try
@@ -239,12 +219,6 @@ internal static class AmethystBetterPingState
         catch { return string.Empty; }
     }
 
-    // 把延迟/帧率这行字提到**最顶层**，不被任何 UI 遮住。
-    //
-    // 做法：给它挂一个「覆盖排序」的子 Canvas ——
-    // `overrideSorting = true` + 很高的 `sortingOrder`，同一画布层级下它就会排到最前。
-    // （嵌套 Canvas 的排序只在父级是 Canvas 时生效；HUD 本身就是 Canvas ✓。
-    //   纯渲染不需要 GraphicRaycaster，所以不挂。）
     private static void EnsureTopLayer(PingTracker tracker)
     {
         try
@@ -264,7 +238,7 @@ internal static class AmethystBetterPingTrackerPatch
 {
     public static bool Prefix(PingTracker __instance)
     {
-        if (AmethystCompat.OtherPing) return true;   // 已有同功能的独立插件：让它的实现生效
+        if (AmethystCompat.OtherPing) return true;   
         if (!AmethystConfig.BetterPingDisplay.Value) return true;
         AmethystBetterPingState.Render(__instance);
         return false;

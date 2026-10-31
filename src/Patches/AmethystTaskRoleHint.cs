@@ -1,14 +1,10 @@
-using System;
+﻿using System;
 using AmongUs.GameOptions;
 using HarmonyLib;
 using Amethyst;
 
 namespace Amethyst.Patches;
 
-// 原版会把「职业名 + 提示 + 职业说明」追加在任务列表末尾。不删掉的话，它会和我们自己的
-// 「职业信息」面板显示同一段内容（EHR `HudPatch.cs` 第 1649 行同样把它删掉）。
-//
-// 任务文本本身**不再做任何着色**，原版给什么颜色就用什么颜色。
 internal static class AmethystTaskRoleHint
 {
     internal static string Strip(string taskList)
@@ -39,7 +35,7 @@ internal static class AmethystTaskRoleHintPatch
         try
         {
             if (__instance == null || __instance.taskText == null || __instance.gameObject == null) return;
-            // 只看**原版任务面板**；我们自己的克隆「职业信息」面板不碰。
+            
             if (__instance.gameObject.name == AmethystRolePanel.PanelName) return;
 
             string text = AmethystTaskRoleHint.Strip(taskList);

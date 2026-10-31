@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using BepInEx.Unity.IL2CPP.Utils.Collections;
 using HarmonyLib;
@@ -11,7 +11,6 @@ internal static class AmethystWinnerRoleReveal
 {
     internal static bool Enabled => AmethystConfig.WinnerRoleReveal != null && AmethystConfig.WinnerRoleReveal.Value;
 
-    // 只等人物对象出现（很短），不再等名字——名字要好几秒才会写好，那就是延迟感的来源。
     private const int MaxWaitFrames = 30;
 
     internal static IEnumerator CoReveal(EndGameManager egm)
@@ -57,7 +56,6 @@ internal static class AmethystWinnerRoleReveal
             var used = new HashSet<byte>();
             string role = AmethystRecap.WinnerRole(data.PlayerName, data.Outfit.ColorId, used);
 
-            // 获取胜利者的外观颜色，为名字着色（若无有效颜色则保持白）
             int colorId = data.Outfit != null ? data.Outfit.ColorId : -1;
             string coloredName = AmethystColors.Name(data.PlayerName, colorId);
 
@@ -71,7 +69,6 @@ internal static class AmethystWinnerRoleReveal
             label.richText = true;
             label.alignment = TextAlignmentOptions.Top;
 
-            // 用原版人物本体的实际边界定位，放在人物下方。
             var body = player.cosmetics.currentBodySprite.BodySprite;
             Bounds bounds = body.bounds;
             label.transform.position = new Vector3(bounds.center.x, bounds.min.y - 0.08f, source.transform.position.z);
@@ -81,8 +78,6 @@ internal static class AmethystWinnerRoleReveal
         }
     }
 
-    // 立即匹配：优先用**颜色**（人物创建时就已经设好，不用等名字），
-    // 其次名字，最后才退回按顺序对应。这样既不会张冠李戴，也没有等待感。
     private static PoolablePlayer FindPlayer(PoolablePlayer[] players, Il2CppSystem.Collections.Generic.List<CachedPlayerData> winners, int index, HashSet<int> used)
     {
         CachedPlayerData data = winners[index];

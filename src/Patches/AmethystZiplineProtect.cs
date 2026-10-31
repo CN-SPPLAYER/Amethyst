@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using UnityEngine;
 
 namespace Amethyst.Patches;
@@ -8,7 +8,6 @@ internal static class AmethystZiplineProtect
     private static float _okUntil;
     private static float _lastToast;
 
-    // 独立开关：Guard.ZiplineProtect（旧的实现错误地挂在 RpcGuard 主开关上）
     internal static bool On => AmethystConfig.ZiplineProtect != null && AmethystConfig.ZiplineProtect.Value;
 
     internal static void MarkOk()
@@ -18,7 +17,7 @@ internal static class AmethystZiplineProtect
 
     internal static bool IsForced(PlayerControl pc)
     {
-        // 用 PlayerId 判定"是不是本机"（不依赖 IL2CPP 包装对象的 ==/!=）
+        
         if (!AmethystColors.SamePlayer(pc, PlayerControl.LocalPlayer)) return false;
         if (Time.unscaledTime < _okUntil) return false;
         if (Time.unscaledTime - _lastToast >= 2f)
