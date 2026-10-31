@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using AmongUs.Data;
 using HarmonyLib;
 using InnerNet;
@@ -7,14 +7,6 @@ using UnityEngine;
 
 namespace Amethyst.Patches;
 
-// 第 207 轮（参考 BetterAmongUs `MonoScripts\PlayerInfoDisplay.cs`，加入我们自己的信息）：
-// 大厅中在每名玩家的名字**上方**显示一行扩展信息：
-//   第一行：平台 + 等级（平台灰色、等级黄色）
-//   第二行：好友码（正常青色；缺失/无效标红并写「无好友码」）
-//
-// 实现方式与 BAU 相同：克隆原版 `Names/NameText_TMP`，挂到同一个父节点下。
-// 每名玩家每 15 帧刷新一次（10 人局 ≈ 每帧 0.7 次原生读取），并且只在文本变化时才写 TMP。
-// 仅大厅显示；离开大厅自动隐藏。
 internal sealed class AmethystLobbyPlayerInfo : MonoBehaviour
 {
     private const float OffsetY = 0.52f;
@@ -89,15 +81,12 @@ internal sealed class AmethystLobbyPlayerInfo : MonoBehaviour
             bool on = AmethystConfig.LobbyPlayerInfo != null && AmethystConfig.LobbyPlayerInfo.Value;
             if (!on || !AmethystPlayerCacheStore.InLobby) { Set(string.Empty); return; }
 
-            // ❌ 高危闪退风险防御：绝不直接去读频繁重组的 pc.Data（Disconnected 后会瞬置 null 或抛异常导致 0xC0000005）
-            // 应该通过极度安全的托管错峰快照读取。
             if (!AmethystPlayerCacheStore.TryGet(_player.PlayerId, out AmethystPlayerCache cache) || cache == null)
             {
                 Set(string.Empty);
                 return;
             }
 
-            // 校验玩家原生数据状态和离线状态（cache.Pc 的安全检测）
             if (cache.Pc == null || cache.Pc.gameObject == null)
             {
                 Set(string.Empty);
@@ -110,8 +99,6 @@ internal sealed class AmethystLobbyPlayerInfo : MonoBehaviour
             string platform = AmethystAccess.PlatformOf(c);
             string level = AmethystJoinLevels.Display(c);
 
-            // 直播主模式（游戏自带设置，参考 BAU `PlayerInfoDisplay`）：
-            // 隐藏平台信息，并把好友码打码，避免直播时泄露。
             bool streamer = false;
             try
             {

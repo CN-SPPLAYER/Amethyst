@@ -1,4 +1,4 @@
-using Il2CppInterop.Runtime.Attributes;
+﻿using Il2CppInterop.Runtime.Attributes;
 using UnityEngine;
 
 namespace Amethyst;
@@ -22,16 +22,10 @@ public sealed class AmethystMenuButton : MonoBehaviour
     private static bool _atMenu;
     private static MainMenuManager _menuMgr;
 
-    // ⚠ 第 180 轮性能：旧实现每 0.4 秒 `FindObjectOfType<MainMenuManager>()` 一次。
-    //   `FindObjectOfType` 是**全场景遍历**，主界面场景里有上千个对象（UI、活动立绘、
-    //   角色模型…），每秒扫 2.5 次纯属浪费 —— 而且它绝大多数时候是"找得到但没变"。
-    //   现在缓存实例并校验 `activeInHierarchy`：找到之后就一直复用，
-    //   只有对象被销毁/失活时才在**下一个节流窗口**重新找一次。
     internal static bool AtMainMenu()
     {
         float t = Time.unscaledTime;
 
-        // 已有有效引用 → 一次字段读就返回（绝大多数帧走这条）。
         if (_menuMgr != null)
         {
             try
@@ -39,7 +33,7 @@ public sealed class AmethystMenuButton : MonoBehaviour
                 if (_menuMgr.gameObject.activeInHierarchy) { _atMenu = true; return true; }
             }
             catch { }
-            _menuMgr = null;   // 已销毁
+            _menuMgr = null;   
         }
 
         if (t - _menuAt < 0.4f) return _atMenu;
@@ -72,7 +66,7 @@ public sealed class AmethystMenuButton : MonoBehaviour
     private static bool Visible()
     {
         if (AmethystMenu.Rebinding) return false;
-        // Android 上屏幕菜单按钮是唯一可靠的入口，强制显示、不可关闭。
+        
         if (!AmethystPlatform.IsAndroid && !AmethystConfig.MenuButton.Value) return false;
         return HudManager.Instance != null || AtMainMenu();
     }
@@ -113,8 +107,6 @@ public sealed class AmethystMenuButton : MonoBehaviour
     {
             if (!Visible()) { _grabbing = false; _dragging = false; return; }
 
-            // 菜单打开时屏幕按钮直接不接收输入：菜单本身有右上角关闭、Esc 和菜单键。
-            // 这样无论按钮和窗口是否重合、菜单是否缩放，都不会出现一次点击同时开关菜单。
             if (AmethystMenu.Opened) { _grabbing = false; _dragging = false; return; }
 
             ReadPointer(out Vector2 gui, out bool down, out bool held, out bool up);
@@ -177,7 +169,6 @@ public sealed class AmethystMenuButton : MonoBehaviour
             if (press <= 0f) _pressAt = -1f;
         }
 
-        // 参考 Toggle/Lock：纯文字、深色矩形、柔和投影 + 顶部高光，不再往按钮里贴一张图标。
         AmethystStyle.Halo(new Rect(r.x - 3f, r.y + 4f, r.width + 6f, r.height + 8f),
             A(Color.black, 0.55f), 4, 10);
 

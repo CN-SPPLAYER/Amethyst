@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using InnerNet;
 using UnityEngine;
@@ -11,8 +11,7 @@ namespace Amethyst;
 
 public sealed class AmethystAutoLobbyReturn : MonoBehaviour
 {
-    // 第 160 轮性能修复：FindObjectOfType 是全场景遍历，**绝不能在 Update 里每帧调用**。
-    // 改成最多每 0.5 秒查一次并缓存实例（这才是大厅/对局里持续掉帧的来源之一）。
+    
     private static EndGameManager _egmCache;
     private static float _nextEgmLookup;
     private const float AutoReturnDelaySeconds = 3f;
@@ -41,7 +40,6 @@ public sealed class AmethystAutoLobbyReturn : MonoBehaviour
                 return;
             }
 
-            // 退出游戏/回到主菜单后 AmongUsClient 会变为未加入状态：立即停止，避免反复建房
             var client = AmongUsClient.Instance;
             if (client == null || client.GameState == InnerNetClient.GameStates.NotJoined)
             {
@@ -68,7 +66,7 @@ public sealed class AmethystAutoLobbyReturn : MonoBehaviour
                         _egmCache = Object.FindObjectOfType<EndGameManager>();
                     }
                     EndGameManager manager = _egmCache;
-            // 只在结算界面生效；否则（主菜单/其它场景）不动作，避免误触创建房间
+            
             if (manager == null)
             {
                 ResetState();
@@ -90,9 +88,6 @@ public sealed class AmethystAutoLobbyReturn : MonoBehaviour
                 return;
             }
 
-            // 先走结算界面自己的「再来一局/返回大厅」入口；**成功就不要再点按钮**。
-            // 之前两者都会执行：`NextGame()` 之后再点一次按钮 = 第二次 JoinGame，
-            // 服务端会判定重复登录（用户看到的官方「重复登录」提示就是这么来的）。
             bool acted = TryInvokeEndGameAction(manager);
             if (!acted) acted = TryClickEndGameButtons(manager);
 
@@ -102,7 +97,6 @@ public sealed class AmethystAutoLobbyReturn : MonoBehaviour
                 return;
             }
 
-            // 已经成功触发“再来一局/返回大厅”后不再重复调用，避免重复 JoinGame。
             if (acted)
             {
                 pending = false;
@@ -149,8 +143,6 @@ public sealed class AmethystAutoLobbyReturn : MonoBehaviour
             return false;
         }
 
-        // 正确入口：结算界面的“再来一局/返回大厅”在 EndGameNavigation.NextGame()，
-        // 而不是 EndGameManager 上（原实现反射 EndGameManager 的 Continue/NextGame/PlayAgain 永远找不到）。
         try
         {
             EndGameNavigation nav = manager.Navigation;
@@ -164,7 +156,6 @@ public sealed class AmethystAutoLobbyReturn : MonoBehaviour
         {
         }
 
-        // 兜底：极少数版本才把方法挂在 EndGameManager 上
         string[] methodNames = { "Continue", "NextGame", "PlayAgain" };
         for (int i = 0; i < methodNames.Length; i++)
         {

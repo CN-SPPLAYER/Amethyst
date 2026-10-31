@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
@@ -20,8 +20,6 @@ namespace Amethyst
         internal static Sprite AmogusBan => _amogusBan ??= AmethystExternalResources.CreateSprite("DarkMode/AmogusBan.png", "Amethyst.Resources.DarkMode.ImageResource.AmogusBan.png");
         internal static Sprite ModStamp => _modStamp ??= AmethystExternalResources.CreateSprite("ModStamp.png", "Amethyst.Resources.ModStamp.png");
         internal static Sprite EditTag => _editTag ??= AmethystExternalResources.CreateSprite("EditTag.png", "Amethyst.Resources.EditTag.png");
-
-        // ⚠ 第 214 轮：启动动画已按要求移除，`SplashIcon` 属性与 `SplashIcon.png` 一并删除。
 
         private static Sprite LoadSprite(string resourceName)
         {
@@ -62,9 +60,6 @@ namespace Amethyst
             return null;
         }
 
-        // Loads a PNG resource and slices it into a grid of sprites using Nebula's DividedSpriteLoader
-        // math: column = index % cols, row = index / cols, rect.y flipped so row 0 is the top strip,
-        // pivot centered, 100 pixels-per-unit.
         private static Sprite[] LoadDividedSprites(string resourceName, int cellW, int cellH)
         {
             const string resourcePrefix = "Amethyst.Resources.";

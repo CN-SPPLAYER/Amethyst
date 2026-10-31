@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Il2CppInterop.Runtime.Attributes;
 using UnityEngine;
@@ -7,17 +7,6 @@ namespace Amethyst;
 
 public enum AmethystNotifyKind { Info, Success, Warning, Danger }
 
-// 模组通知（屏幕上方居中的自定义卡片，**纯文本**）。
-//
-// 反作弊 / 防护 / 管理 / 模组检测等模组通知都走这里，不再占用原版左下角通知栏。
-// "通知左侧展示玩家装扮"已按要求**整块删除**（试过三套渲染方案都出不来，不再投入）。
-//
-// ⚠ 不再渲染玩家颜色（第一百二十轮，按用户要求）：
-//   消息里的玩家名原本是 `<color=#RRGGBB>名字</color>`，而 Unity 富文本颜色是**替换**字符颜色
-//   （连 alpha 一起替换），导致彩色名字不跟白色正文一起淡出、到点"啪"地消失。
-//   先后试过"按颜色分段绘制"（曾把整条通知文字都搞没）与"把 alpha 写进颜色标签"（未生效），
-//   现在改为**彻底不渲染颜色**：`Clean()` 里去掉所有富文本标签，纯文本 + 统一 style 颜色
-//   ⇒ 淡入淡出必然与卡片同步。
 public sealed class AmethystToast : MonoBehaviour
 {
     private sealed class Entry
@@ -27,6 +16,7 @@ public sealed class AmethystToast : MonoBehaviour
         internal float CreatedAt;
         internal float Duration;
         internal AmethystNotifyKind Kind;
+        internal int Count;
     }
 
     private const int MaxEntries = 4;
@@ -41,7 +31,6 @@ public sealed class AmethystToast : MonoBehaviour
     private static float _lastVanillaAt;
     private static bool _layerRaised;
 
-    // 仅当本模组自己在推送原版通知栏消息时为 true（保留给以后需要用原版通知栏的场景）。
     internal static bool AllowVanillaNotify;
 
     private static void EnsureNotifierLayer(NotificationPopper notifier)
@@ -78,15 +67,15 @@ public sealed class AmethystToast : MonoBehaviour
 
         while (Entries.Count >= MaxEntries) Entries.RemoveAt(0);
 
-        // 去重：同一内容 1.2 秒内再次推送只刷新计时，不叠加新卡片
         float now = Time.unscaledTime;
         for (int i = 0; i < Entries.Count; i++)
         {
             Entry ex = Entries[i];
             if (ex == null || ex.Title != t || ex.Detail != d) continue;
-            if (now - ex.CreatedAt > 1.2f) continue;
+            if (now - ex.CreatedAt > ex.Duration) continue;
             ex.CreatedAt = now;
             ex.Duration = Mathf.Clamp(life, 1.25f, 15f);
+            ex.Count++;
             return;
         }
 
@@ -97,10 +86,10 @@ public sealed class AmethystToast : MonoBehaviour
             CreatedAt = now,
             Duration = Mathf.Clamp(life, 1.25f, 15f),
             Kind = kind,
+            Count = 1,
         });
     }
 
-    // 原版通知栏（左下角 HudManager.Notifier）。目前没人用，保留备用。
     internal static void PushVanilla(string title, string detail, AmethystNotifyKind kind = AmethystNotifyKind.Info)
     {
         string t = Clean(title, 120);
@@ -154,7 +143,7 @@ public sealed class AmethystToast : MonoBehaviour
     [HideFromIl2Cpp]
     internal void DrawGui()
     {
-        if (Entries.Count == 0) return;   // 无通知时连计时都不做
+        if (Entries.Count == 0) return;   
         int __p = AmethystPerfProbe.Begin(Section.S_Toast);
         try { DrawGuiInner(); }
         finally { AmethystPerfProbe.End(__p, Section.S_Toast); }
@@ -163,7 +152,7 @@ public sealed class AmethystToast : MonoBehaviour
     private void DrawGuiInner()
     {
         EnsureStyles();
-        if (_title == null) return;   // 样式没建起来就这一帧不画（下一帧会重试）
+        if (_title == null) return;   
 
         int prevDepth = GUI.depth;
         Color prevColor = GUI.color;
@@ -224,12 +213,10 @@ public sealed class AmethystToast : MonoBehaviour
         AmethystStyle.FillRounded(rect, card, r);
         AmethystStyle.StrokeRounded(rect, A(Color.white, 0.08f * alpha), r, 1);
 
-        // 左侧状态条：颜色区分通知类型，也是通知的视觉标识。
         AmethystStyle.FillRounded(
             new Rect(rect.x + 1f, rect.y + 10f, 3f, Mathf.Max(4f, rect.height - 20f)),
             A(bar, 0.90f * alpha), 2);
 
-        // 兜底：万一别处漏改了全局 GUI 着色，这里强制拉回白色，保证文字一定可见。
         GUI.color = Color.white;
         GUI.contentColor = Color.white;
 
@@ -238,7 +225,8 @@ public sealed class AmethystToast : MonoBehaviour
         float titleY = rect.y + (string.IsNullOrEmpty(e.Detail) ? 14f : 9f);
 
         _title.normal.textColor = new Color(1f, 1f, 1f, alpha);
-        GUI.Label(new Rect(textX, titleY, textW, 22f), e.Title, _title);
+        string title = e.Count > 1 ? e.Title + " ×" + e.Count : e.Title;
+        GUI.Label(new Rect(textX, titleY, textW, 22f), title, _title);
 
         if (!string.IsNullOrEmpty(e.Detail))
         {
@@ -255,13 +243,6 @@ public sealed class AmethystToast : MonoBehaviour
             AmethystStyle.FillRounded(new Rect(trackX, trackY, fillW, 2f), A(bar, 0.95f * alpha), 1);
     }
 
-    // 去掉所有富文本标签（`<color=…>`、`</color>`、`<size=…>` 等），只留纯文字。
-    //
-    // 为什么不再渲染玩家颜色（第一百二十轮，按用户要求）：
-    //   Unity 富文本的 `<color>` 是**替换**字符颜色（连 alpha 一起替换），
-    //   结果是彩色玩家名不跟白色正文一起淡出、到点"啪"地消失；
-    //   试过"按颜色分段绘制"（曾把整条通知的文字都搞没）和"把 alpha 写进颜色标签"（未生效），
-    //   于是改为**完全不渲染颜色**：纯文本 + 统一的 style 颜色 ⇒ 淡入淡出必然同步。
     private static string StripTags(string s)
     {
         if (string.IsNullOrEmpty(s) || s.IndexOf('<') < 0) return s;
@@ -283,8 +264,6 @@ public sealed class AmethystToast : MonoBehaviour
         catch { return s; }
     }
 
-    // 样式只建一次；**用"样式是否为空"判断**而不是布尔标志 ——
-    // 万一某次创建失败（GUI.skin 不可用等），下一帧还能重试，不会永久卡在"没样式 ⇒ 画不出字"。
     private void EnsureStyles()
     {
         if (_title != null && _detail != null) return;
@@ -344,13 +323,12 @@ public sealed class AmethystToast : MonoBehaviour
         if (string.IsNullOrWhiteSpace(value)) return string.Empty;
         string s = value.Replace("\r", " ").Replace("\n", " ").Trim();
 
-        // 不渲染玩家颜色：先把富文本标签全部去掉（`<color=…>` 等只影响颜色的标签）
         s = StripTags(s);
         if (string.IsNullOrEmpty(s)) return string.Empty;
 
         if (s.Length <= max) return s;
         int cut = Math.Max(0, max - 1);
-        if (cut > 0 && char.IsHighSurrogate(s[cut - 1])) cut--; // 不切断代理对
+        if (cut > 0 && char.IsHighSurrogate(s[cut - 1])) cut--; 
         return s.Substring(0, cut) + "…";
     }
 }

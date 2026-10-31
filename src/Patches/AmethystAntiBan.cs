@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Hazel;
 using HarmonyLib;
 using InnerNet;
@@ -25,13 +25,10 @@ internal static class AmethystAntiBan
         bool host = false;
         try { host = net.AmHost; } catch { }
 
-        // 防踢总开关 + 「防护仅房主 RPC 踢人漏洞」子开关
         bool guardOn = AmethystConfig.AntiKickEnabled == null || AmethystConfig.AntiKickEnabled.Value;
         bool subOn = AmethystConfig.HostOnlyRpcKickGuard == null || AmethystConfig.HostOnlyRpcKickGuard.Value;
         if (!guardOn || !subOn) return true;
 
-        // 无论主机还是客户端，都丢弃伪造的管道踢人数据包；
-        // 主机（可选）再对发送者执行警告/踢出/封禁。
         if (!host)
         {
             AmethystToast.Push(AmethystText.T("AntiBan_2"), AmethystText.T("VentKickExploitDetectedVentKickRPC"), 5.0f, AmethystNotifyKind.Warning);

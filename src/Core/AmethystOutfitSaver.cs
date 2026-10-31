@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,9 +9,6 @@ using UnityEngine;
 
 namespace Amethyst;
 
-/// <summary>
-/// 单个服装预设数据（对齐参考模组 OutfitSaver.Data.Json.OutfitData）。
-/// </summary>
 internal sealed class AmethystOutfitData
 {
     public string HatId = HatData.EmptyId;
@@ -34,21 +31,12 @@ internal sealed class AmethystOutfitData
     }
 }
 
-/// <summary>
-/// 存档包装（对齐参考模组 BetterDataFile：持久化 SelectedOutfitPreset）。
-/// </summary>
 internal sealed class AmethystOutfitStore
 {
     public int Selected = 0;
     public List<AmethystOutfitData> Presets = new List<AmethystOutfitData>();
 }
 
-/// <summary>
-/// 服装保存数据层（对齐参考模组设计）：
-/// - 订阅 Customization 五个变更事件，换装时自动写入当前选中槽位并落盘（无手动保存）
-/// - 点击预设按钮：应用该预设到 Customization 并发送 RPC
-/// - 无快捷键
-/// </summary>
 public sealed class AmethystOutfitSaver : MonoBehaviour
 {
     private readonly List<AmethystOutfitData> _presets = new List<AmethystOutfitData>();
@@ -100,8 +88,6 @@ public sealed class AmethystOutfitSaver : MonoBehaviour
     
     }
 
-    // ===== 订阅变更事件实现自动保存（参考 OutfitData.Initialize）=====
-
     private static AmongUs.Data.Player.PlayerCustomizationData Customization
     {
         get
@@ -131,9 +117,6 @@ public sealed class AmethystOutfitSaver : MonoBehaviour
         catch { }
     }
 
-    /// <summary>
-    /// 换装时自动写入当前选中的预设槽位（参考模组的 Save 回调）。
-    /// </summary>
     private void SaveToSelected()
     {
         if (_ignoreChange) return;
@@ -155,7 +138,6 @@ public sealed class AmethystOutfitSaver : MonoBehaviour
 
     private static string Norm(string id) => string.IsNullOrEmpty(id) ? HatData.EmptyId : id;
 
-    // 按字段类型兜底空值；修复旧版损坏数据（pet/skin/visor/nameplate 字段被写入 hat_ 前缀 ID）
     private static string NormField(string id, string emptyId)
     {
         if (string.IsNullOrEmpty(id)) return emptyId;
@@ -163,9 +145,6 @@ public sealed class AmethystOutfitSaver : MonoBehaviour
         return id;
     }
 
-    /// <summary>
-    /// 启动时匹配当前穿着对应的预设（参考 FindCurrentPreset）。
-    /// </summary>
     private void FindCurrentPreset()
     {
         AmongUs.Data.Player.PlayerCustomizationData cust = Customization;
@@ -184,8 +163,6 @@ public sealed class AmethystOutfitSaver : MonoBehaviour
         _selected = 0;
     }
 
-    // ===== 应用预设（UI 点击入口）=====
-
     internal void ApplyPresetFromUI(int index)
     {
         if (_cooldown > 0f) return;
@@ -196,7 +173,6 @@ public sealed class AmethystOutfitSaver : MonoBehaviour
         AmethystOutfitData data = _presets[_selected];
         ValidateOutfit(data);
 
-        // 写入 DataManager（触发预览刷新）；ignoreChange 防止自动保存回写自身
         AmongUs.Data.Player.PlayerCustomizationData cust = Customization;
         if (cust != null)
         {
@@ -213,7 +189,6 @@ public sealed class AmethystOutfitSaver : MonoBehaviour
             _ignoreChange = false;
         }
 
-        // 游戏内同步 RPC（主菜单 LocalPlayer 为空则跳过）
         PlayerControl lp = PlayerControl.LocalPlayer;
         if (lp != null)
         {
@@ -231,9 +206,6 @@ public sealed class AmethystOutfitSaver : MonoBehaviour
         SaveFile();
     }
 
-    /// <summary>
-    /// 校验预设中的物品是否已解锁，未解锁重置为空（参考 ValidateOutfit）。
-    /// </summary>
     private static void ValidateOutfit(AmethystOutfitData d)
     {
         try
@@ -248,8 +220,6 @@ public sealed class AmethystOutfitSaver : MonoBehaviour
         }
         catch { }
     }
-
-    // ===== 存取 =====
 
     private void EnsureLoaded()
     {
@@ -322,11 +292,6 @@ public sealed class AmethystOutfitSaver : MonoBehaviour
         catch { }
     }
 
-    // ⚠ 第 180 轮性能：旧实现是「`_instance == null` 就 `FindObjectOfType`」。
-    //   Unity 里被销毁的对象与 `null` 判等成立 —— 于是只要场景里**没有**这个组件
-    //   （对局中就没有），每次访问都会触发一次**全场景遍历**，而它被
-    //   `AmethystOutfitSaverUI` 在每帧的 Update 里访问。
-    //   现在加一个"已经找过、确实没有"的负缓存 + 1 秒节流，找不到就不再重复扫。
     internal static AmethystOutfitSaver Instance
     {
         get

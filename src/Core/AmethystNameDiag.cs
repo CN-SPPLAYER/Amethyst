@@ -1,22 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEngine;
 
 namespace Amethyst;
 
-// ===== 名字渲染链路诊断（跟随「性能探针」开关，默认关闭）====//
-//
-// 【第 184 轮实测结论 —— 记在这里，别再重复查】
-//   抓到 94 条采样，唯一「不渲染」的状态是：
-//       #1 pc=o tmp=o dirty=0 missData=0 shift=0 outDef=1 name=[] colorId=-1 live=[???]
-//   即：游戏自己的**名字未同步占位符 `???`**。此时 `data.PlayerName` 为空、
-//   `data.DefaultOutfit` 也是 null（colorId=-1），**游戏自己都还没收到该玩家数据**。
-//   本模组在 `hex` 为空时直接 return，**不可能写出 `???`** —— 那个字符串来自游戏。
-//   约 6 秒后数据到达，名字立即带上正确的 `<color=…>`。
-//   ⇒ 这段窗口是**游戏/网络侧的数据同步延迟**，不是本模组的渲染 bug。
-//
-// 【用法】菜单「其他功能 → 性能 → 性能探针」打开后，这里每秒打一行。
 internal static class AmethystNameDiag
 {
     private static float _next;
@@ -59,7 +47,6 @@ internal static class AmethystNameDiag
                       .Append(" written=[").Append(Trunc(c.WrittenNameText, 14)).Append(']')
                       .Append(" colorId=").Append(c.ColorId);
 
-                    // 现场读一次真实 TMP
                     TextMeshPro t = c.NameText;
                     if (t != null)
                     {

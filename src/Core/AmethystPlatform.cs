@@ -1,20 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
 
 namespace Amethyst;
 
-// ===== 平台适配（第 275 轮）=====
-//
-// 目标：同一份 AnyCPU DLL 同时跑在 Windows（BepInEx）与 Android（Starlight）。
-//
-// 依据 Starlight 官方移植指南：
-//   · `BepInEx.Paths.GameRootPath` 在 Android 上**不可写**，不能用来存数据；
-//   · Starlight 提供环境变量 `STAR_DATA_PATH` 作为模组数据目录；
-//   · 也推荐 `Application.persistentDataPath`。
-//
-// 因此所有需要**写盘**的路径统一走 `DataRoot`，只读路径（插件目录）保持原样。
 internal static class AmethystPlatform
 {
     internal static bool IsAndroid
@@ -39,9 +29,6 @@ internal static class AmethystPlatform
         }
     }
 
-    // 可写数据根目录。
-    //   Android: STAR_DATA_PATH → Application.persistentDataPath → 临时目录
-    //   Windows: BepInEx 的 GameRootPath（保持原有行为）
     internal static string DataRoot
     {
         get
@@ -69,7 +56,6 @@ internal static class AmethystPlatform
         }
     }
 
-    // 本模组自己的数据子目录（历史、作弊记录、音乐等）
     internal static string DataDir
     {
         get
@@ -78,25 +64,8 @@ internal static class AmethystPlatform
         }
     }
 
-    // Windows 专属能力：批处理替换/重启、NAudio(WinMM) 播放、控制台窗口
     internal static bool SupportsWindowsOnlyFeatures => !IsAndroid;
 
-    // ===== Android / MonoMod 原生辅助库目录（第 276 轮）=====
-    //
-    // 真机日志：202 个补丁全部失败，内层异常都是
-    //   UnauthorizedAccessException: Access to the path '/data/.cache' is denied.
-    //
-    // 原因是 Starlight 把 MonoMod 的 HelperDropPath 指到了 /data/.cache；
-    // MonoMod 每次创建 detour 都要把原生异常辅助库（mm-exhelper.so）释放到该目录，
-    // 目录不可写时每个 Harmony 补丁都会在建 detour 阶段失败 —— 与补丁签名无关。
-    //
-    // 这里在打补丁之前把 HelperDropPath 改到可写目录。依次尝试：
-    //   1) /data/.cache（若能创建，保持 Starlight 的目录/命名空间）
-    //   2) Application.temporaryCachePath（应用私有 cache，位于 /data 下）
-    //   3) STAR_DATA_PATH/Amethyst/tmp（本模组已证明可写）
-    //
-    // 同时写环境变量与 AppContext（覆盖 MonoMod 尚未初始化的情况），
-    // 再反射调用 MonoMod.Switches.SetSwitchValue（覆盖已经缓存的旧值）。
     private static bool _helperPathPrepared;
 
     internal static void PrepareMonoModHelperPath()
@@ -134,16 +103,11 @@ internal static class AmethystPlatform
             return;
         }
 
-        // 确保最终选中的目录对应的环境变量已生效
         ApplyAndroidHome(chosen);
 
-        // MonoMod 的 Switches 在静态构造时读取 MONOMOD_<开关名>，
-        // 开关名是 HelperDropPath（不是 HELPER_DROP_PATH），两种写法都写一份。
         try { Environment.SetEnvironmentVariable("MONOMOD_HelperDropPath", chosen); } catch { }
         try { Environment.SetEnvironmentVariable("MONOMOD_HELPER_DROP_PATH", chosen); } catch { }
 
-        // BepInEx 的缓存目录也可能被 Starlight 指到 /data/.cache；
-        // CachePath 的 setter 是私有的，用反射写（再回退到 backing field）。
         try
         {
             PropertyInfo cacheProp = typeof(BepInEx.Paths).GetProperty("CachePath", BindingFlags.Public | BindingFlags.Static);
@@ -161,9 +125,6 @@ internal static class AmethystPlatform
         }
         catch { }
 
-        // 若 Switches 已经初始化并缓存了 /data/.cache，必须用 SetSwitchValue 覆盖。
-        // ⚠ 不要 break：0Harmony 可能内置一份 MonoMod.Utils，而 MonoMod.Core 用的是
-        //    另一份独立程序集；两边的 Switches 静态字典互不相通，必须每一份都设置。
         int switchesFound = 0;
         try
         {
@@ -191,8 +152,6 @@ internal static class AmethystPlatform
         }
         catch { }
 
-        // AppContext 是 MonoMod 的另一条回退路径（Switches.TryGetSwitchValue）。
-        // AppContext.SetData 在 .NET 6 是 internal，用反射写。
         try
         {
             MethodInfo setData = typeof(AppContext).GetMethod(
@@ -251,8 +210,6 @@ internal static class AmethystPlatform
         catch { }
     }
 
-    // 主动触发 MonoMod 的 PlatformTriple.Current（AndroidSystem..ctor 在这里跑），
-    // 这样可以在打补丁前逐个候选验证目录是否真的可用。
     private static bool TryInitializePlatformTriple(out string error)
     {
         error = null;
@@ -270,7 +227,6 @@ internal static class AmethystPlatform
                 return true;
             }
 
-            // 类型尚未加载：无法提前验证，交给第一次补丁。
             return true;
         }
         catch (Exception e)
@@ -283,18 +239,17 @@ internal static class AmethystPlatform
 
     private static string[] HelperPathCandidates()
     {
-        // /proc/self/cmdline 给出当前进程的包名（Starlight 的 dev.allofus.fusioncore），
-        // 用它拼内部数据目录；这比 Application.identifier（游戏包名）更可靠。
+        
         string pkg = ProcessPackage();
 
         return new[]
         {
-            "/data/.cache",                               // Starlight 默认值；可写时保持其目录
-            SafeCombine("/data/user/0", pkg, "files"),    // 应用内部 files（可写，最可能可 dlopen）
+            "/data/.cache",                               
+            SafeCombine("/data/user/0", pkg, "files"),    
             SafeCombine("/data/data", pkg, "files"),
-            SafeCombine("/data/user/0", pkg, "cache"),    // 应用内部 cache
-            "/data/local/tmp",                            // shell 上下文
-            SafeApplicationPath(false),                   // Unity cache（可能是外部存储）
+            SafeCombine("/data/user/0", pkg, "cache"),    
+            "/data/local/tmp",                            
+            SafeApplicationPath(false),                   
             SafeCombine(DataDir, "tmp"),
             SafeCombine(SafeApplicationPath(true), "Amethyst", "tmp"),
         };

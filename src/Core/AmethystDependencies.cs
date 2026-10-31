@@ -1,27 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
 namespace Amethyst;
 
-// 音乐播放器解码依赖（NAudio / NVorbis）的运行时释放与解析。
-//
-//   · 编译期：csproj 把 NuGet 包里的 DLL 作为 EmbeddedResource 打进本 DLL；
-//   · 运行时：首次用到时释放到「Amethyst 数据目录\libs」，并挂 AppDomain.AssemblyResolve
-//             用 Assembly.LoadFile 加载。
-//
-// 为什么必须这样：BepInEx/IL2CPP 不会自动解析模组目录旁的 NuGet 依赖。
-// 只写 PackageReference 的话编译能过，运行时抛 FileNotFoundException: NAudio。
-//
-// NAudio / NVorbis 均为 MIT 许可的第三方开源库，许可证全文见释放目录下的
-// THIRD-PARTY-NOTICES.txt（随依赖一起释放）。
 internal static class AmethystDependencies
 {
-    // 逻辑名 -> 文件名（与 csproj 的 LogicalName 一一对应）
-    //
-    // ⚠ 后三项是许可证文件，**不是**可加载的程序集：MIT 要求随分发保留版权与许可声明，
-    //   所以它们只被释放到 libs 目录，不参与 AssemblyResolve。
+    
     private static readonly (string Res, string File)[] Libs =
     {
         ("Amethyst.libs.NAudio.dll", "NAudio.dll"),
@@ -33,7 +19,6 @@ internal static class AmethystDependencies
         ("Amethyst.libs.NVorbis-LICENSE.txt", "NVorbis-LICENSE.txt"),
     };
 
-    // 只有程序集才注册进 AssemblyResolve
     private static bool IsAssembly(string file) => file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
 
     private static readonly Dictionary<string, string> Paths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -62,18 +47,16 @@ internal static class AmethystDependencies
                         continue;
                     }
 
-                    // 已存在且大小一致就跳过（避免每次启动重复写盘）
                     if (!File.Exists(dest) || new FileInfo(dest).Length != s.Length)
                     {
                         using var fs = File.Create(dest);
                         s.CopyTo(fs);
                     }
 
-                    // 只有程序集才登记给 AssemblyResolve；许可证文本只是释放出来
                     if (IsAssembly(lib.File))
                     {
                         Paths[lib.File] = dest;
-                        // 去掉扩展名作为「程序集短名」的键，AssemblyResolve 用的是短名
+                        
                         Paths[Path.GetFileNameWithoutExtension(lib.File)] = dest;
                     }
                 }

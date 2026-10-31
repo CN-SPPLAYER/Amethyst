@@ -21,7 +21,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <Version>1.1.7</Version>
+    <Version>1.1.8</Version>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <DefineConstants>$(DefineConstants);ANDROID</DefineConstants>
     <GameRefsDir>..\_refs\</GameRefsDir>

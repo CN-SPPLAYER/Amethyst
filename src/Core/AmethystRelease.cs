@@ -1,31 +1,21 @@
-using System;
+﻿using System;
 using System.Text.Json;
 
 namespace Amethyst;
 
-// ===== GitHub Release 解析（第 267 轮）=====
-//
-// 为什么单独抽出来：
-//   `AmethystUpdater`（主界面「检查更新」按钮）与 `AmethystVersionChecker`（启动检查）
-//   现在都从 **GitHub Releases API** 取版本，不应各写一份 JSON 解析与版本归一化。
-//
-// 为什么不再依赖 `Version.txt`：
-//   `Version.txt` 是仓库里的一个普通文件，发布 release 时不会自动更新；
-//   一旦忘记改，启动检查就会一直显示旧版本。Releases API 直接读发布记录，
-//   与「按格式发 release」这一实际流程一致。
 internal static class AmethystRelease
 {
     internal const string ApiUrl = "https://api.github.com/repos/CN-SPPLAYER/Amethyst/releases/latest";
 
     internal struct Info
     {
-        internal string Tag;        // tag_name，如 Amethyst_v1.1.7
-        internal string Name;       // release 标题，如 Amethyst_v1.1.7hotfix1
-        internal string Version;    // 归一化后的数字版本，如 1.1.7
-        internal string AssetUrl;   // .dll 资产的 browser_download_url
-        internal string AssetApiUrl; // .dll 资产的 api url（api.github.com/.../releases/assets/{id}）
-        internal string AssetName;  // 资产文件名
-        internal string Digest;     // 可选：sha256:...
+        internal string Tag;        
+        internal string Name;       
+        internal string Version;    
+        internal string AssetUrl;   
+        internal string AssetApiUrl; 
+        internal string AssetName;  
+        internal string Digest;     
     }
 
     internal static bool TryParse(string json, out Info info)
@@ -69,7 +59,6 @@ internal static class AmethystRelease
                             break;
                         }
 
-                        // 没有 .dll 时先记住第一个可下载资产，便于报「没有 DLL」而不是「没有资产」
                         if (string.IsNullOrEmpty(info.AssetUrl))
                         {
                             info.AssetName = an;
@@ -85,7 +74,6 @@ internal static class AmethystRelease
         catch { return false; }
     }
 
-    // "Amethyst_v1.1.7" / "v1.1.7" / "1.1.7" / "Amethyst_v1.1.7hotfix2" → "1.1.7"
     internal static string NormalizeVersion(string tag)
     {
         try
@@ -108,7 +96,6 @@ internal static class AmethystRelease
         catch { return string.Empty; }
     }
 
-    // 返回值：>0 远程更新；0 相同；<0 本地更新。任一侧解析失败返回 0（按「无法判定」处理）。
     internal static int Compare(string localVersion, string remoteVersion)
     {
         try

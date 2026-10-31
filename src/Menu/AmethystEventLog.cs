@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Il2CppInterop.Runtime.Attributes;
 using UnityEngine;
@@ -59,8 +59,7 @@ public sealed class AmethystEventLog : MonoBehaviour
     {
         if (Mathf.Abs(textW - _measuredAt) < 0.5f) return;
         _measuredAt = textW;
-        // ⚠ 性能（第 156 轮）：原来这里每帧把行高缓存清零 ⇒ 每帧重新测量全部行的文字（点击后行数增加更明显）。
-        // 现在只在**文字宽度变化**时失效缓存，其余时间复用已测好的高度。
+        
         if (textW != _lastTextW) { _lastTextW = textW; for (int i = 0; i < _rows.Count; i++) _rows[i].H = 0f; }
     }
 

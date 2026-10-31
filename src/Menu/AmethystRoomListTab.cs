@@ -1,10 +1,8 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace Amethyst;
 
-// 「模组房间列表」页签的绘制。数据与网络都在 AmethystRoomService，
-// 这里只做布局与交互（放大/缩小、窄宽度、滚动都由主菜单的现有框架处理）。
 public sealed partial class AmethystMenu
 {
     private GUIStyle _roomCode;
@@ -24,8 +22,6 @@ public sealed partial class AmethystMenu
 
     private const int RoomsTab = 4;
 
-    // 只有「菜单打开 + 当前是房间列表页签 + 未折叠」才刷新；
-    // 其余情况立刻停掉定时刷新，并中止在途请求。
     private void SyncRoomListVisibility()
     {
         AmethystRoomService svc = AmethystRoomService.Instance;
@@ -75,7 +71,6 @@ public sealed partial class AmethystMenu
         if (Event.current != null && Event.current.type == EventType.Repaint)
             svc.EnsureFresh();
 
-        // ---- 顶部状态条 ----
         var head = new Rect(x, y, w, 40f);
         AmethystStyle.FillRounded(head, A(p.Accent, 0.06f), 10);
         AmethystStyle.StrokeRounded(head, A(p.Accent, 0.18f), 10, 1);
@@ -100,12 +95,9 @@ public sealed partial class AmethystMenu
         }
         y += 50f;
 
-        // ---- 隐私开关：是否把自己的房间上报到公共列表 ----
-        // 默认关闭，只看不发；房主打开后才会出现在列表里。
         Toggle(x, ref y, w, AmethystText.T("RoomListReportOwnRoom"), AmethystConfig.RoomListReportOwnRoom);
         y += 4f;
 
-        // ---- 加入确认条（会退出当前房间，先确认再执行）----
         if (!string.IsNullOrEmpty(_roomConfirm))
         {
             var bar = new Rect(x, y, w, 52f);
@@ -130,7 +122,6 @@ public sealed partial class AmethystMenu
             y += 60f;
         }
 
-        // ---- 筛选（客户端过滤，点击循环切换，切换即时生效）----
         {
             float fx = x;
             float fy = y;
@@ -140,7 +131,6 @@ public sealed partial class AmethystMenu
             y += 32f;
         }
 
-        // ---- 空 / 加载 / 失败 ----
         if (!svc.Loaded && !svc.Failed)
         {
             DrawEmpty(new Rect(x, y, w, 190f), AmethystIcon.Rooms, AmethystText.T("RoomListLoading"));
@@ -165,7 +155,6 @@ public sealed partial class AmethystMenu
             return;
         }
 
-        // ---- 筛选后为空 ----
         int shownCount = 0;
         for (int i = 0; i < svc.Rooms.Count; i++)
             if (svc.Rooms[i] != null && MatchesFilters(svc.Rooms[i])) shownCount++;
@@ -180,7 +169,6 @@ public sealed partial class AmethystMenu
             return;
         }
 
-        // ---- 房间行 ----
         for (int i = 0; i < svc.Rooms.Count; i++)
         {
             AmethystRoom room = svc.Rooms[i];
@@ -212,7 +200,6 @@ public sealed partial class AmethystMenu
         const float joinW = 88f;
         float textW = r.width - joinW - 40f;
 
-        // 第一行：房间码 + 状态/地图/模式标签
         _roomCode.normal.textColor = p.Accent;
         GUI.Label(new Rect(r.x + 14f, r.y + 5f, 104f, 24f), room.Code, _roomCode);
 
@@ -237,7 +224,6 @@ public sealed partial class AmethystMenu
             }
         }
 
-        // 第二行：房主 + 人数/延迟/更新时间
         string host = string.IsNullOrEmpty(room.Host) ? AmethystText.T("RoomListHostUnknown") : room.Host;
         GUI.Label(new Rect(r.x + 14f, r.y + 34f, textW * 0.55f, 20f), host, _roomHost);
 
@@ -246,7 +232,6 @@ public sealed partial class AmethystMenu
         string meta = AmethystText.T("RoomListMeta", room.Players, max, ping, RoomAge(room.Age));
         GUI.Label(new Rect(r.x + 14f + textW * 0.55f, r.y + 34f, textW * 0.45f, 20f), meta, _roomMeta);
 
-        // 右侧：加入 / 确认 / 不可加入
         float bx = r.xMax - joinW - 12f;
         float by = r.y + 15f;
 
@@ -371,7 +356,6 @@ public sealed partial class AmethystMenu
         return region.Replace(" ", string.Empty).Replace("-", string.Empty);
     }
 
-    // 语言标记来自服务端原样回传的 note（"lang=xx"）。
     private static string RoomLang(AmethystRoom r)
     {
         string note = r.Note ?? string.Empty;

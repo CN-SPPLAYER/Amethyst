@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -6,25 +6,17 @@ using UnityEngine;
 
 namespace Amethyst
 {
-    /// <summary>
-    /// 模组外部资源管理器：
-    /// 将内嵌图片、文本等资产释放到外部目录 `Among Us/Amethyst/Resources/` 下。
-    /// 
-    /// 规则：
-    /// 1. 启动时如果外部文件缺失任何一个，自动从程序集内嵌资源释放补齐（永不丢失基础资产）；
-    /// 2. 玩家手动覆盖/修改了外部图片，直接加载玩家的新图片，绝不驳回修改；
-    /// 3. 提供统一的资源字节/文件读取入口。
-    /// </summary>
+    
     internal static class AmethystExternalResources
     {
+        
+        private const int MaxSliceCount = 512;
+
         private static string _resDir;
         internal static string ResDir => _resDir ??= Path.Combine(AmethystPlatform.DataDir, "Resources");
 
         private static bool _initialized;
 
-        /// <summary>
-        /// 确保外部资源目录健全：自动补齐所有缺失的内置资产。
-        /// </summary>
         internal static void EnsureInitialized()
         {
             if (_initialized) return;
@@ -37,9 +29,6 @@ namespace Amethyst
                     Directory.CreateDirectory(ResDir);
                 }
 
-                // 需要外部化的内置图片清单：相对路径 -> 内嵌资源全名
-                // ⚠ 大厅图片（LobbyArt）已整体移除（第 240 轮：用户要求不再展示），
-                //   因此清单里不再有它，也不会被释放到外部目录。
                 var assets = new (string relativePath, string resName)[]
                 {
                     ("DarkMode/DarkReport.png", "Amethyst.Resources.DarkMode.ImageResource.DarkReport.png"),
@@ -52,6 +41,15 @@ namespace Amethyst
                     ("MainMenuArt.png", "Amethyst.Resources.MainMenuArt.png"),
                     ("MainMenuArt2.png", "Amethyst.Resources.MainMenuArt2.png"),
                     ("MainMenuArt3.png", "Amethyst.Resources.MainMenuArt3.png"),
+
+                    ("KeyGuide/KeyBindBackground.png", "Amethyst.Resources.KeyGuide.KeyBindBackground.png"),
+                    ("KeyGuide/KeyBindCharacters0.png", "Amethyst.Resources.KeyGuide.KeyBindCharacters0.png"),
+                    ("KeyGuide/KeyBindCharacters1.png", "Amethyst.Resources.KeyGuide.KeyBindCharacters1.png"),
+                    ("KeyGuide/KeyBindCharacters2.png", "Amethyst.Resources.KeyGuide.KeyBindCharacters2.png"),
+                    ("KeyGuide/KeyBindCharacters3.png", "Amethyst.Resources.KeyGuide.KeyBindCharacters3.png"),
+                    ("KeyGuide/KeyBindCharacters4.png", "Amethyst.Resources.KeyGuide.KeyBindCharacters4.png"),
+                    ("KeyGuide/KeyBindCharacters5.png", "Amethyst.Resources.KeyGuide.KeyBindCharacters5.png"),
+                    ("KeyGuide/KeyBindOption.png", "Amethyst.Resources.KeyGuide.KeyBindOption.png"),
                 };
 
                 Assembly asm = typeof(AmethystExternalResources).Assembly;
@@ -89,10 +87,6 @@ namespace Amethyst
             }
         }
 
-        /// <summary>
-        /// 品牌资源迁移：如果外部文件仍是旧版内置资源，就用当前内置资源覆盖；
-        /// 用户自己替换过的文件（hash 不同）保持不动。
-        /// </summary>
         private static void RefreshBrandAsset(Assembly asm, string relPath, string resName, string oldHash)
         {
             try
@@ -120,9 +114,6 @@ namespace Amethyst
             }
         }
 
-        /// <summary>
-        /// 获取外部图片字节（优先读取外部自定义文件；若不存在或读取失败，回退到内置资源）。
-        /// </summary>
         internal static byte[] LoadBytes(string relPath, string embeddedFallbackName)
         {
             EnsureInitialized();
@@ -140,7 +131,6 @@ namespace Amethyst
                 }
             }
 
-            // 回退到内置资源
             try
             {
                 Assembly asm = typeof(AmethystExternalResources).Assembly;
@@ -157,9 +147,6 @@ namespace Amethyst
             return null;
         }
 
-        /// <summary>
-        /// 创建 Sprite（优先外部文件，支持玩家任意替换图片）。
-        /// </summary>
         internal static Sprite CreateSprite(string relPath, string embeddedFallbackName, float pixelsPerUnit = 100f)
         {
             byte[] data = LoadBytes(relPath, embeddedFallbackName);
@@ -190,6 +177,76 @@ namespace Amethyst
             catch (Exception ex)
             {
                 AmethystPlugin.Logger?.LogError($"[Resources] 解码 Sprite 失败 {tag}: {ex.Message}");
+                return null;
+            }
+        }
+
+        internal static Sprite[] CreateSlicedSprites(string relPath, string embeddedFallbackName, int cellWidth, int cellHeight, float pixelsPerUnit = 100f)
+        {
+            if (cellWidth <= 0 || cellHeight <= 0) return null;
+
+            byte[] data = LoadBytes(relPath, embeddedFallbackName);
+            if (data == null || data.Length == 0) return null;
+
+            Texture2D texture = null;
+            try
+            {
+                
+                texture = new Texture2D(2, 2, TextureFormat.ARGB32, false);
+                if (!ImageConversion.LoadImage(texture, data, true))
+                {
+                    UnityEngine.Object.Destroy(texture);
+                    return null;
+                }
+
+                texture.hideFlags |= HideFlags.HideAndDontSave | HideFlags.DontSaveInEditor;
+                texture.filterMode = FilterMode.Bilinear;
+
+                int cols = texture.width / cellWidth;
+                int rows = texture.height / cellHeight;
+                if (cols <= 0 || rows <= 0)
+                {
+                    AmethystPlugin.Logger?.LogWarning(
+                        $"[Resources] 图片尺寸 {texture.width}x{texture.height} 装不下 {cellWidth}x{cellHeight} 的格子: {relPath}");
+                    UnityEngine.Object.Destroy(texture);
+                    return null;
+                }
+
+                long cellCount = (long)cols * rows;
+                if (cellCount > MaxSliceCount)
+                {
+                    AmethystPlugin.Logger?.LogWarning(
+                        $"[Resources] 图片 {relPath} 尺寸 {texture.width}x{texture.height} 按 {cellWidth}x{cellHeight} 切成 {cols}x{rows} = {cellCount} 格，超过上限 {MaxSliceCount}，拒绝切片");
+                    UnityEngine.Object.Destroy(texture);
+                    return null;
+                }
+
+                if (texture.width != cols * cellWidth || texture.height != rows * cellHeight)
+                {
+                    AmethystPlugin.Logger?.LogWarning(
+                        $"[Resources] 图片 {relPath} 尺寸 {texture.width}x{texture.height} 不是格子 {cellWidth}x{cellHeight} 的整数倍（{cols}x{rows} 格），切片可能错位");
+                }
+
+                var sprites = new Sprite[cols * rows];
+                var pivot = new Vector2(0.5f, 0.5f);
+                for (int row = 0; row < rows; row++)
+                {
+                    for (int col = 0; col < cols; col++)
+                    {
+                        var rect = new Rect(col * cellWidth, (rows - 1 - row) * cellHeight, cellWidth, cellHeight);
+                        Sprite sprite = Sprite.Create(texture, rect, pivot, pixelsPerUnit);
+                        sprite.hideFlags |= HideFlags.HideAndDontSave | HideFlags.DontSaveInEditor;
+                        sprites[row * cols + col] = sprite;
+                    }
+                }
+
+                return sprites;
+            }
+            catch (Exception ex)
+            {
+                
+                if (texture != null) UnityEngine.Object.Destroy(texture);
+                AmethystPlugin.Logger?.LogError($"[Resources] 切分图片失败 {relPath}: {ex.Message}");
                 return null;
             }
         }

@@ -1,15 +1,10 @@
-using System;
+﻿using System;
 using System.Text;
 using TMPro;
 using UnityEngine;
 
 namespace Amethyst;
 
-// 文字高光：一条亮带从**左往右**扫过模组文字。
-//
-// 参考 OnyxMenu 的 `NocturneNameColor`：不依赖 TMP 顶点色，
-// 而是每帧把文字重写成「逐字符 `<color>` 标签」的富文本。
-// 这是本游戏里最稳定的做法（顶点色在 IL2CPP/TMP 下有时不生效）。
 public sealed class AmethystTextShine : MonoBehaviour
 {
     public AmethystTextShine(IntPtr ptr) : base(ptr) { }
@@ -19,12 +14,11 @@ public sealed class AmethystTextShine : MonoBehaviour
     private string _tag = string.Empty;
     private bool _ready;
 
-    // 基础色（品牌紫）与高光色（白）。
     private static readonly Color BaseColor = new Color(0.71f, 0.33f, 1f, 1f);
     private static readonly Color HighlightColor = Color.white;
 
-    private const float Speed = 9f;    // 扫过速度
-    private const float Band = 2.5f;   // 亮带宽度（字符数）
+    private const float Speed = 9f;    
+    private const float Band = 2.5f;   
 
     private readonly StringBuilder _sb = new StringBuilder(128);
     private float _next;
@@ -40,7 +34,7 @@ public sealed class AmethystTextShine : MonoBehaviour
     private void LateUpdate()
     {
         if (!_ready || _text == null || _tag.Length == 0) return;
-        // 扫光不需要 60fps：限到约 30fps，省掉一半的富文本重建与 TMP 重排。
+        
         float now = Time.unscaledTime;
         if (now < _next) return;
         _next = now + 1f / 30f;

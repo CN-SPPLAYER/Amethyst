@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
 using HarmonyLib;
@@ -6,16 +6,6 @@ using UnityEngine;
 
 namespace Amethyst.Patches;
 
-// 主界面展示图片轮换：在主菜单背后循环渐变平滑轮换多张大图。
-//
-// 图片来源：
-//   - 图1: MainMenuArt.png (内置 Amethyst 主图)
-//   - 图2: MainMenuArt2.png (BackThings.png)
-//   - 图3: MainMenuArt3.png (backthingsred.png)
-//
-// 轮换与透明度逻辑：
-//   - 当前展示图与下一张图叠加，上一张 alpha = 1 - t，下一张 alpha = t。
-//   - 两张图片叠加后的综合透明度始终为 1.0 (100% 不透明)，绝不会露给主界面深色背景。
 internal static class AmethystMainMenuArt
 {
     internal static bool Enabled => AmethystConfig.MainMenuArt != null && AmethystConfig.MainMenuArt.Value;
@@ -31,7 +21,6 @@ internal static class AmethystMainMenuArt
     private const float PixelsPerUnit = 150f;
     private static readonly Vector3 Position = new Vector3(0f, 0f, 600f);
 
-    // 轮换动画控制参数：每张图展示 6 秒，过渡渐变持续 0.8 秒
     private const float DisplayTime = 6f;
     private const float FadeTime = 0.8f;
 
@@ -44,6 +33,7 @@ internal static class AmethystMainMenuArt
         try
         {
             if (menu == null) return;
+            _menu = menu;
 
             if (!Enabled)
             {
@@ -115,7 +105,6 @@ internal static class AmethystMainMenuArt
         {
             float t = Mathf.Clamp01(_timer / FadeTime);
             
-            // 精确双层叠加：Layer1 (1 - t), Layer2 (t)，综合覆盖率恒定为 100%
             _sr1.color = new Color(1f, 1f, 1f, 1f - t);
             _sr2.color = new Color(1f, 1f, 1f, t);
 
@@ -127,7 +116,6 @@ internal static class AmethystMainMenuArt
                 _timer = 0f;
                 _isFading = false;
 
-                // 交换 Layer，准备下一次轮换
                 _sr1.sprite = Sprites[_currentIndex];
                 _sr1.color = new Color(1f, 1f, 1f, 1f);
                 FitToScreen(_sr1, _artObj1);
@@ -156,6 +144,7 @@ internal static class AmethystMainMenuArt
     private static GameObject _ambience;
     private static bool _ambienceHidden;
     private static float _nextFind;
+    private static MainMenuManager _menu;
 
     internal static void SetAmbienceVisible(bool visible)
     {
@@ -180,7 +169,8 @@ internal static class AmethystMainMenuArt
             if (now < _nextFind) return;
             _nextFind = now + 1f;
 
-            _ambience = GameObject.Find("Ambience");
+            _ambience = _menu != null ? _menu.transform.Find("Ambience")?.gameObject : null;
+            if (_ambience == null) _ambience = GameObject.Find("Ambience");
             if (_ambience == null) return;
 
             _ambience.SetActive(false);
@@ -257,7 +247,6 @@ internal static class AmethystMainMenuArt
     }
 }
 
-// 进入主界面时应用
 [HarmonyPatch(typeof(MainMenuManager), "Start")]
 internal static class AmethystMainMenuArtStartPatch
 {
@@ -267,8 +256,6 @@ internal static class AmethystMainMenuArtStartPatch
     }
 }
 
-// 低频兜底（借用主菜单自身的 LateUpdate）：中途开关无需重进主界面即可生效。
-// Apply() 内部在「已创建 / 已关闭」时都是廉价返回，所以每帧调用没有负担。
 [HarmonyPatch(typeof(MainMenuManager), "LateUpdate")]
 internal static class AmethystMainMenuArtUpdatePatch
 {

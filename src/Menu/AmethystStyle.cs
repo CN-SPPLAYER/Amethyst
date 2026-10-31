@@ -33,28 +33,24 @@ internal sealed class AmethystPalette
     internal Color Muted { get; }
 }
 
-internal static class AmethystStyle
+internal static partial class AmethystStyle
 {
 
     private static Color Soft(Color a) => new Color(a.r * 0.34f, a.g * 0.34f, a.b * 0.34f, 1f);
 
     private static AmethystPalette Theme(string name, Color accent) =>
         new AmethystPalette(name.ToLowerInvariant(), name,
-            Rgb(10, 11, 15),      // window #0A0B0F
-            Rgb(18, 20, 26),      // panel  #12141A
+            Rgb(10, 11, 15),      
+            Rgb(18, 20, 26),      
             accent,
             Soft(accent),
-            Rgb(31, 34, 42),      // button
-            Rgb(45, 49, 60),      // button hover
-            Rgb(240, 241, 245),   // text
-            Rgb(150, 155, 168));  // muted
+            Rgb(31, 34, 42),      
+            Rgb(45, 49, 60),      
+            Rgb(240, 241, 245),   
+            Rgb(150, 155, 168));  
 
-    // ===== 主题已固定 =====
-    // 按要求**移除主题选项**，强制使用 **#A06EFF**（即原来列表里的 Violet 色号）。
-    // `AmethystPalette` / `Current` 这套 API 保留不变，所以其它所有界面代码无需改动，
-    // 只是 Current 永远返回同一个调色板，不再读配置、也不再随玩家选择变化。
     private static readonly AmethystPalette Forced =
-        Theme("Amethyst", Rgb(160, 110, 255));      // #A06EFF
+        Theme("Amethyst", Rgb(160, 110, 255));      
 
     private static Texture2D _white;
     private static GUIStyle _fill;
@@ -223,8 +219,6 @@ internal static class AmethystStyle
         return t;
     }
 
-    // 圆角矩形 SDF 光晕：与 OnyxMenu `Skin.BuildDrop/Glow` 同构。
-    // reach = 向外扩散的距离；radius = 圆角半径。九宫格拉伸，任意窗口尺寸都不会变形。
     internal static void Halo(Rect r, Color c, int radius, int reach)
     {
         radius = Mathf.Clamp(radius, 4, 40);
@@ -385,8 +379,6 @@ internal static class AmethystStyle
         return t;
     }
 
-    // 第 282 轮：主界面空闲时预生成菜单会用到的圆角/描边/光晕贴图，
-    // 避免第一次打开菜单时在主线程上集中创建而造成掉帧。
     internal static void PrewarmTextures()
     {
         try
@@ -409,23 +401,8 @@ internal static class AmethystStyle
         catch { }
     }
 
-    private static GUIStyle BuildStrokeStyle(int radius, int thickness)
-    {
-        var st = new GUIStyle();
-        st.normal.background = BuildStroke(radius, thickness);
-        st.border = Offset(radius, radius, radius, radius);
-        return st;
-    }
 
-    internal static RectOffset Offset(int l, int r, int t, int b)
-    {
-        var o = new RectOffset();
-        o.left = l;
-        o.right = r;
-        o.top = t;
-        o.bottom = b;
-        return o;
-    }
 
-    private static Color Rgb(byte r, byte g, byte b) => new Color(r / 255f, g / 255f, b / 255f, 1f);
+
+
 }

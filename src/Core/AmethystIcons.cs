@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Amethyst;
@@ -50,7 +50,7 @@ internal static class AmethystIcons
                 c.Star(0.5f, 0.5f, 0.44f, 0.18f, th);
                 break;
             case AmethystIcon.Rooms:
-                // 房间列表：左侧三个圆点 + 三条横线
+                
                 c.Disc(0.14f, 0.26f, 0.055f);
                 c.Disc(0.14f, 0.50f, 0.055f);
                 c.Disc(0.14f, 0.74f, 0.055f);

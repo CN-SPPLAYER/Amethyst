@@ -1,17 +1,9 @@
-using System;
+﻿using System;
 using Il2CppInterop.Runtime.Attributes;
 using UnityEngine;
 
 namespace Amethyst;
 
-// ===== 检查更新的确认弹窗（第 266 轮）=====
-//
-// 主界面没有现成的模态框，而「下载并替换自身」必须是**用户明确同意**的动作，
-// 所以这里用 IMGUI 画一个轻量模态：遮罩 + 卡片 + 两个按钮。
-//
-// 视觉全部复用项目既有能力（`AmethystStyle.Fill/FillRounded/StrokeRounded` +
-// `GUI.Button(..., _invisible)`），与菜单、通知保持同一套观感，
-// 且不依赖任何可能被 IL2CPP 裁剪的原生类型。
 public sealed class AmethystUpdateDialog : MonoBehaviour
 {
     public AmethystUpdateDialog(IntPtr ptr) : base(ptr) { }
@@ -28,13 +20,10 @@ public sealed class AmethystUpdateDialog : MonoBehaviour
         || AmethystUpdater.State == AmethystUpdater.Phase.Downloading
         || AmethystUpdater.State == AmethystUpdater.Phase.Failed;
 
-    // 失败时弹窗里要能关掉：关掉后同时把状态复位，否则会一直停在 Failed。
     internal static void DismissFailure()
     {
         if (AmethystUpdater.State == AmethystUpdater.Phase.Failed) AmethystUpdater.Reset();
     }
-
-    public void Update() { }
 
     [HideFromIl2Cpp]
     internal void DrawGui()
@@ -84,7 +73,6 @@ public sealed class AmethystUpdateDialog : MonoBehaviour
         _btnLabel.normal.textColor = p.Text;
     }
 
-    // 项目统一的按钮画法：底色 + 描边 + 居中文字 + 透明点击区
     [HideFromIl2Cpp]
     private bool Button(Rect r, string label, bool primary, AmethystPalette p)
     {
@@ -117,7 +105,7 @@ public sealed class AmethystUpdateDialog : MonoBehaviour
 
         int prevDepth = GUI.depth;
         Color prevColor = GUI.color;
-        GUI.depth = -20000;   // 盖在菜单 / 通知之上
+        GUI.depth = -20000;   
         GUI.color = Color.white;
 
         try
@@ -126,7 +114,6 @@ public sealed class AmethystUpdateDialog : MonoBehaviour
             float h = 215f;
             var card = new Rect((Screen.width - w) * 0.5f, (Screen.height - h) * 0.5f, w, h);
 
-            // 遮罩：压暗背景，明确这是模态
             AmethystStyle.Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(0f, 0f, 0f, 0.55f));
 
             AmethystStyle.FillRounded(card, p.Panel, 12);
@@ -194,8 +181,7 @@ public sealed class AmethystUpdateDialog : MonoBehaviour
             bool laterClicked = Button(laterR, AmethystText.T("UpdateLater"), false, p);
             if (laterClicked)
             {
-                // 「稍后」只关弹窗，不清掉已下载的包：
-                // 用户下次点「检查更新」还能继续用同一个暂存文件。
+                
                 if (AmethystUpdater.State == AmethystUpdater.Phase.Found) AmethystUpdater.NeedConfirm = false;
                 else if (AmethystUpdater.State == AmethystUpdater.Phase.Failed) AmethystUpdater.Reset();
                 else AmethystUpdater.NeedRestart = false;

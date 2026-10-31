@@ -1,13 +1,8 @@
-using System;
+﻿using System;
 using System.Text;
 
 namespace Amethyst;
 
-// 房间上报的内置密钥（发布版）。
-//
-// 按需求编译进 DLL；为避免源码/仓库里直接出现明文，做了 XOR + Base64。
-// 这不是加密：能从 DLL 还原。如需真正保密，应改为服务端下发的短期 token。
-// 配置 [RoomList] Secret 非空时优先使用配置值。
 internal static class AmethystRoomKey
 {
     private const string Encoded = "DK5N5RH9RjqzYPMstFs71mL7c/gq/AJAuUHmGrN7NP04lHbne9VKJoBV6Q==";

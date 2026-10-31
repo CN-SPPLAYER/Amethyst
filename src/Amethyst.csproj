@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Amethyst</AssemblyName>
     <RootNamespace>Amethyst</RootNamespace>
@@ -7,7 +7,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <Version>1.1.7</Version>
+    <Version>1.1.8</Version>
     <Company>一只屑小紫</Company>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Deterministic>true</Deterministic>
@@ -205,6 +205,7 @@
     <EmbeddedResource Include="Resources\DarkMode.ImageResource.DarkKeyboard.png" LogicalName="Amethyst.Resources.DarkMode.ImageResource.DarkKeyboard.png" />
     <EmbeddedResource Include="Resources\DarkMode.ImageResource.AmogusBan.png" LogicalName="Amethyst.Resources.DarkMode.ImageResource.AmogusBan.png" />
     <EmbeddedResource Include="Resources\ModStamp.png" LogicalName="Amethyst.Resources.ModStamp.png" />
+    <EmbeddedResource Include="Resources\TopRightButtonHolder.png" LogicalName="Amethyst.Resources.TopRightButtonHolder.png" />
     <EmbeddedResource Include="Resources\EditTag.png" LogicalName="Amethyst.Resources.EditTag.png" />
     <EmbeddedResource Include="Resources\AmethystLogo.png" LogicalName="Amethyst.Resources.AmethystLogo.png" />
     <EmbeddedResource Include="Resources\MainMenuArt.png" LogicalName="Amethyst.Resources.MainMenuArt.png" />
@@ -213,6 +214,17 @@
     <EmbeddedResource Include="Resources\Lang\en_US.json" LogicalName="Amethyst.Resources.Lang.en_US.json" />
     <EmbeddedResource Include="Resources\Lang\ru_RU.json" LogicalName="Amethyst.Resources.Lang.ru_RU.json" />
     <EmbeddedResource Include="Resources\Lang\zh_CN.json" LogicalName="Amethyst.Resources.Lang.zh_CN.json" />
+
+    <!-- 按键角标：位图字模（来源见 Menu\AmethystKeyGuide.cs 顶部注释）。
+         背景 72x36 = 2 帧 36x36（只用到第 0 帧「普通态」）；字形均为 18 宽、19 高一行的竖排图集。 -->
+    <EmbeddedResource Include="Resources\KeyGuide\KeyBindBackground.png" LogicalName="Amethyst.Resources.KeyGuide.KeyBindBackground.png" />
+    <EmbeddedResource Include="Resources\KeyGuide\KeyBindCharacters0.png" LogicalName="Amethyst.Resources.KeyGuide.KeyBindCharacters0.png" />
+    <EmbeddedResource Include="Resources\KeyGuide\KeyBindCharacters1.png" LogicalName="Amethyst.Resources.KeyGuide.KeyBindCharacters1.png" />
+    <EmbeddedResource Include="Resources\KeyGuide\KeyBindCharacters2.png" LogicalName="Amethyst.Resources.KeyGuide.KeyBindCharacters2.png" />
+    <EmbeddedResource Include="Resources\KeyGuide\KeyBindCharacters3.png" LogicalName="Amethyst.Resources.KeyGuide.KeyBindCharacters3.png" />
+    <EmbeddedResource Include="Resources\KeyGuide\KeyBindCharacters4.png" LogicalName="Amethyst.Resources.KeyGuide.KeyBindCharacters4.png" />
+    <EmbeddedResource Include="Resources\KeyGuide\KeyBindCharacters5.png" LogicalName="Amethyst.Resources.KeyGuide.KeyBindCharacters5.png" />
+    <EmbeddedResource Include="Resources\KeyGuide\KeyBindOption.png" LogicalName="Amethyst.Resources.KeyGuide.KeyBindOption.png" />
   </ItemGroup>
 
   <PropertyGroup>

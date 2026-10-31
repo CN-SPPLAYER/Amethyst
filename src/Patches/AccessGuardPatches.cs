@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using InnerNet;
 using UnityEngine;
 
@@ -21,16 +21,6 @@ internal static class AmethystKickSelfGuardPatch
     }
 }
 
-// ===== 第 219 轮 #1：大厅投票踢人拦截（移植自 OnyxMenu `Patches\AccessGuardPatches.cs`）=====
-//
-// 与既有的 `AmethystVoteBanProtect`（在 `RpcGuardPatches.cs`，挂在 `VoteBanSystem.HandleRpc`）**分工不同**：
-//   · `AmethystVoteBanProtect` 只管**非法票** —— 死人投票、会议外投票；合法的大厅投票踢人**放行**。
-//   · 本补丁管**整类拦截** —— 主机在大厅里拦下**任何**投票踢人，并可惩罚投票者。
-// 两者挂在同一个类的不同方法上（`HandleRpc` 收包 / `AddVote` 真正记账），互不覆盖。
-//
-// ⚠ 只有主机能拦：投票计数归主机，非主机 return true 什么也做不了（与 OnyxMenu 一致）。
-// ⚠ `AddVote` 返回 false 只是"不加这一票"，**不会**把投票者的 UI 关掉；这是有意的 ——
-//   原版投票是客户端本地先亮、再靠主机广播同步，我们不改客户端表现，只让这一票在主机侧不生效。
 [HarmonyPatch(typeof(VoteBanSystem), "AddVote")]
 internal static class AmethystVoteKickProtectPatch
 {
@@ -48,8 +38,7 @@ internal static class AmethystVoteKickProtectPatch
             string action = AmethystConfig.VoteKickAction != null ? AmethystConfig.VoteKickAction.Value : "Null";
             if (!string.Equals(action, "Null", System.StringComparison.OrdinalIgnoreCase))
             {
-                // Kick/Ban 走 `AmethystAccess.Act`，因此**自动**受 CheaterActionThreshold 约束
-                // （累计到门槛才真的踢/封，之前只警告）—— 与其它检测点的处罚口径一致。
+                
                 AmethystAccess.Act(
                     net, srcClient, action,
                     AmethystAccess.ClientName(net, srcClient),
@@ -61,7 +50,7 @@ internal static class AmethystVoteKickProtectPatch
                     AmethystAccess.ClientName(net, srcClient), AmethystAccess.ClientName(net, clientId));
             }
 
-            return false;   // 不加这一票
+            return false;   
         }
         catch { return true; }
     }

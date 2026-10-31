@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using InnerNet;
 using UnityEngine;
 using AmongUs.GameOptions;
@@ -66,12 +66,6 @@ public static class AmethystLobbyCopyHelper
         string modeName = GetModeName(mode);
         string langName = GetLanguageName(langKeywords);
 
-        // 排版要求：
-        // 房间号+(当前人数/当前房间总人数)
-        // 模式:[房间当前模式]
-        // 语言:[房间当前语言]
-        // 房主:[房主名称]
-        // 服务器:[服务器名称]
         var sb = new StringBuilder();
         sb.AppendLine($"{code}({cur}/{max})");
         sb.AppendLine($"{AmethystText.T("CopyRoomInfo_Mode")}:{modeName}");
@@ -85,21 +79,17 @@ public static class AmethystLobbyCopyHelper
         AmethystToast.Push(AmethystText.T("CodeCopiedBB", code), 3.0f);
     }
 
-    // 模式名：取**房间当前模式**；显示文案按**模组当前语言**走 AmethystText。
     private static string GetModeName(GameModes mode)
     {
         bool hideSeek = mode is GameModes.HideNSeek or GameModes.SeekFools;
         return AmethystText.T(hideSeek ? "RoomModeHideNSeek" : "RoomModeNormal");
     }
 
-    // 语言名：取**房间当前语言**（房间 GameOptions 的 GameKeywords 位掩码）；
-    // 显示文案按**模组当前语言**走 AmethystText —— 即"房间语言的值" + "模组语言的措辞"。
     private static string GetLanguageName(GameKeywords kw)
     {
-        // 房间没设语言过滤（All=0）→ 显示"全部 / Any / Любой"
+        
         if (kw == GameKeywords.All) return AmethystText.T("RoomLangAny");
 
-        // 单个标志位精确匹配（位掩码里只开了一位的常见情况）
         switch (kw)
         {
             case GameKeywords.English: return AmethystText.T("RoomLangEnglish");
@@ -123,7 +113,6 @@ public static class AmethystLobbyCopyHelper
             case GameKeywords.Other: return AmethystText.T("RoomLangOther");
         }
 
-        // 多个标志位同时开着：按枚举定义顺序取第一项，避免输出一长串。
         if ((kw & GameKeywords.English) != 0) return AmethystText.T("RoomLangEnglish");
         if ((kw & GameKeywords.SpanishLA) != 0) return AmethystText.T("RoomLangSpanishLA");
         if ((kw & GameKeywords.Brazilian) != 0) return AmethystText.T("RoomLangBrazilian");

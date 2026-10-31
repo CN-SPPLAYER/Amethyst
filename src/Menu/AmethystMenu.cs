@@ -59,18 +59,10 @@ public sealed partial class AmethystMenu : MonoBehaviour
     private bool _scrollMoved;
     private float _h = FullH;
     private int _resize;
-    // 第 204 轮：默认窗口从 720 加宽到 940。
-    // 原因：内容区宽度 = 窗口宽 − 侧栏 200 − 边距 36 = 704，减去 12 的列间距后
-    //   每列 346（卡片内文 310，开关标签还有 236px），两列才放得下不挤。
-    // 720 宽时内容区只有 484，分两列每列 236 → 标签只剩 126px，会折行/截断。
-    // 屏幕不够宽时 `ClampWindow` 会自动夹回可视范围，用户也可以自己拖窄。
+    
     private Rect _window = new Rect(300f, 110f, 940f, FullH);
     private bool _mobileCentered;
 
-    // ⚠ 第 166/167 轮：自实现拖动所需的状态。
-    //   `_dragGrab` = 按下瞬间鼠标在**窗口内**的本地偏移（= 鼠标 - 窗口左上角），
-    //   整段拖动过程中**保持不变**；每帧用 `鼠标位置 - _dragGrab` 直接算出窗口位置，
-    //   不做任何累加（累加才是边缘抖动 / 瞬移的根源）。
     private bool _dragging;
     private Vector2 _dragGrab;
 
@@ -110,10 +102,6 @@ public sealed partial class AmethystMenu : MonoBehaviour
     private float _closeAt = -1f;
     private float _fade = 1f;
 
-    // ===== 开合弹簧（第 221 轮：照抄 Nocturne / OnyxMenu 1.2.5 的开合手感）=====
-    // _ax = 打开程度 0..1（打开方向允许轻微过冲），_av = 速度。
-    // 参数与参考实现同值：打开欠阻尼（落位带一次很轻的回弹），关闭近临界阻尼（干脆收走）。
-    // 动画只体现在"画出来的那一帧"，布局 / 拖动 / 缩放 / 命中判定全部不受影响。
     private const float OpenK = 260f, OpenC = 17.5f;
     private const float CloseK = 620f, CloseC = 52.3f;
     private float _ax;
@@ -122,20 +110,11 @@ public sealed partial class AmethystMenu : MonoBehaviour
     private int _press;
     private float _pressAt;
 
-    // ===== 入场错峰（第 248 轮，对齐 OnyxMenu 1.2.5）=====
-    // _openAt = 本次打开的时间戳（-1 = 已经落定 / 无入场动画）；
-    // _enterAge = 距离打开过去了多久，Ent() 用它算每段延迟后的缓出；
-    // _titleNow/_titleOld/_titleAt = 分区标题的交叉淡入（旧标题下沉淡出、新标题上浮淡入）。
     private float _openAt = -1f;
     private float _enterAge = 99f;
-    // 第 280 轮：本次打开已经绘制过几帧。
-    // 首次打开菜单时 Build()/字体/贴图预热可能产生一个长帧；用墙钟算 _enterAge
-    // 会把 1 秒入场直接吃掉，表现就是"启动后第一次打开菜单没有动画（旧观感）"。
-    // 以第一次真正绘制为计时起点即可消除这个差异。
+    
     private int _openDraws;
-    // 第 282 轮：入场计时改为「累计的、限幅的帧时间」，不再用墙钟。
-    // 首开/资源预热造成长帧时，墙钟会让 1 秒入场瞬间走完（看起来没有动画）；
-    // 累计限幅帧时间保证动画至少按真实渲染帧播放完。
+    
     private float _enterClock;
     private float _tabClock;
     private float _titleClock;
@@ -146,20 +125,13 @@ public sealed partial class AmethystMenu : MonoBehaviour
     private float _titleAt = -10f;
 
     private float _tabAnimAt = -1f;
-    // 第 249 轮：卡片级联（cascade）——完全对齐 Onyx 的入场方式。
-    // _tabLag：开菜单后延迟 0.12s 再开始级联；切页签为 0。
-    // _cascade：级联已运行秒数（-100 = 关闭）；_cardIdx：当前页签第几张卡。
+    
     private float _tabLag;
     private float _cascade = -100f;
     private int _cardIdx;
     private Color _cardOuter = Color.white;
     private bool _cardTintOn;
-    // 每个页签各自的子标签选择。索引 = 页签下标；
-    // **最后的「设置」齿轮页下标是 Tabs.Length**，所以数组必须比 Tabs.Length 多开 1 个。
-    //
-    // ⚠ 这里原来写死 new int[5]，而 Tabs.Length == 5、设置页的 _tab == 5 ——
-    // DrawSettings 第一行的 SubBar() 访问 _subTab[5] 直接抛 IndexOutOfRangeException，
-    // 整页在画出任何东西之前就中断，表现就是「模组菜单里的设置页一片空白、啥都没有」。
+    
     private readonly int[] _subTab = new int[Tabs.Length + 1];
     private int _cardGrp = -1;
     private Rect _tabHi;
@@ -167,13 +139,9 @@ public sealed partial class AmethystMenu : MonoBehaviour
     private readonly Dictionary<object, float> _pillAnim = new Dictionary<object, float>();
     private readonly Dictionary<object, float> _pillVel = new Dictionary<object, float>();
 
-    // 子标签的滑动高亮（第 221 轮）：与主标签 `_tabHi` 相同的做法，每槽位一个矩形。
-    // 索引 = 页签下标（与 `_subTab` 同尺寸）。
     private readonly Rect[] _subHi = new Rect[Tabs.Length + 1];
     private readonly bool[] _subHiInit = new bool[Tabs.Length + 1];
 
-    // 第 248 轮：径向光晕贴图 `_flareTex` 已删除 —— 改由 `AmethystStyle.Halo`
-    // 现场按圆角矩形 SDF 生成九宫格贴图（拉伸不变形）。
     private Font _lastBuiltFont;
 
     private static Vector2 M => Event.current != null ? Event.current.mousePosition : new Vector2(-1f, -1f);
@@ -220,65 +188,14 @@ public sealed partial class AmethystMenu : MonoBehaviour
     
     }
 
-    private void Open()
-    {
-        // 照抄 OM（NocturneMenu.Open）：
-        // 若当前已经处于开启状态（例如开着时再次被触发），保留当前弹簧进度（resume）；
-        // 否则**弹簧完全归零**：打开瞬间 _ax = 0、位移 26px，下一帧平滑升起。
-        // 这彻底解决了"打开瞬间的撕裂感" —— 之前不复位，关闭到一半再次打开时
-        // 带着旧的残余速度与位置，或者第一帧初值不是 0，画面会在第一帧闪一下。
-        bool resume = _open;
-        if (!resume)
-        {
-            _ax = 0f;
-            _av = 0f;
-            _axFrame = -1;
-            try { AmethystPlugin.Logger?.LogInfo($"[Menu] open prewarmed={_prewarmed}"); } catch { }
-        }
-        _open = true;
-        _closeAt = -1f;
-        // 第 248 轮：入场错峰从"真正打开"这一刻开始计时（resume 时不动画，直接落定）。
-        _openAt = resume ? -1f : Time.unscaledTime;
-        _enterAge = 0f;
-        _openDraws = 0;
-        _enterClock = 0f;
-        _tabClock = 0f;
-        _titleClock = 0f;
-        _titleAt = Time.unscaledTime;
-        // 与 Onyx `NocturneMenu.Open` 一致：开菜单也触发卡片级联，且延迟 0.12s 起手。
-        _tabAnimAt = _openAt;
-        _tabLag = 0.12f;
-        _roomConfirm = string.Empty;
-        _mobileCentered = false;
-        try { Input.simulateMouseWithTouches = true; } catch { }
-        SyncRoomListVisibility();
-    }
 
-    private void RequestClose()
-    {
-        if (_open && _closeAt < 0f) _closeAt = Time.unscaledTime;
-        SyncRoomListVisibility();
-    }
 
-    private void SetTab(int nt)
-    {
-        if (nt == _tab) return;
-        _tab = nt;
-        _tabAnimAt = Time.unscaledTime;
-        _tabLag = 0f;
-        _tabClock = 0f;
-        _titleClock = 0f;
-        _scroll = 0f;
-        _scrollPending = 0f;
-        _scrollGoal = 0f;
-        _roomConfirm = string.Empty;
-        SyncRoomListVisibility();
-    }
+
+
+
 
     private static float SmoothSat(float t) { t = Mathf.Clamp01(t); return t * t * (3f - 2f * t); }
 
-    // 入场错峰：delay 秒后才开始、len 秒内三次缓出到 1。
-    // _enterAge > 50 表示"不在入场中"（99 是停机值），直接返回 1，稳态零开销。
     private float Ent(float delay, float len)
     {
         if (_enterAge > 50f) return 1f;
@@ -325,7 +242,7 @@ public sealed partial class AmethystMenu : MonoBehaviour
         SyncRoomListVisibility();
         if (!_open)
         {
-            // 第 282 轮：主界面空闲时预生成样式/贴图/字形，避免第一次打开时卡一帧。
+            
             PrewarmIfNeeded();
             return;
         }
@@ -343,10 +260,7 @@ public sealed partial class AmethystMenu : MonoBehaviour
         float vh = Screen.height / s;
 
         float now = Time.unscaledTime;
-        // 第 280 轮：以本次打开后的第一次绘制作为入场计时起点。
-        // 第一次打开时 Build()/字体/贴图预热可能耗时数百毫秒；若用墙钟，
-        // _enterAge 会直接超过 1 秒，Ent()/卡片级联全部落定 —— 看起来就是旧版（没有动画）。
-        // 在第一次绘制时把三个时间戳挪到当前帧，动画就能完整播放。
+        
         if (_openAt >= 0f && _openDraws == 0)
         {
             _openAt = now;
@@ -355,8 +269,6 @@ public sealed partial class AmethystMenu : MonoBehaviour
         }
         _openDraws++;
 
-        // 第 282 轮：所有入场时钟每帧只推进一次。
-        // OnGUI 同一帧会跑 Layout / Repaint / 鼠标等多个事件，直接累加会跑快 2~3 倍。
         if (_clockFrame != Time.frameCount)
         {
             _clockFrame = Time.frameCount;
@@ -370,22 +282,6 @@ public sealed partial class AmethystMenu : MonoBehaviour
         if (_openAt >= 0f && _enterAge >= 1f) _openAt = -1f;
         bool closing = _closeAt >= 0f;
 
-        // ===== 开合弹簧（第 221 轮，照抄 Nocturne / OnyxMenu 1.2.5）=====
-        // 旧实现是两条固定时长的补间（开 0.26s / 关 0.2s），只有透明度在动，落位很"平"。
-        // 现在改成参考实现的弹簧-阻尼模型：打开时窗口下移 26px 向上落位 + 淡入 + 开场光晕，
-        // 带一次很轻的过冲，收尾自然；关闭时快速下坠淡出。
-        //
-        // ⚠ 实机反馈修正：**不再缩放窗口内容**。上一版把整个窗口从 93.5% 放大，
-        //   字号随之短暂变化（"字忽大忽小"）。OM 那边也只缩放"外壳"、正文不缩放；
-        //   我们这里外壳与正文在同一组里，索性整体不做缩放 —— 只保留位移 + 淡入 + 光晕。
-        //
-        // 细节（与参考实现一致的部分）：
-        //   · **每帧只推进一次**（用 `Time.frameCount` 判重）—— OnGUI 同一帧会跑多个事件
-        //     （Layout / MouseDown / Repaint…），不判重会把弹簧在同帧积分多次；
-        //     也不再用"只在 Repaint 推进"，那会让同一帧内"画的位置"和"点的位置"差一帧
-        //     （开合过程中点按钮/拖动都会有最多一帧的偏移）。
-        //   · 帧时长 > 0.02s 时拆 3 个子步，掉帧 / 卡顿后不会发散；
-        //   · lean（淡入进度）比 _ax 跑得快（×1.35）：颜色先出来，位移再慢慢落位。
         if (_axFrame != Time.frameCount)
         {
             _axFrame = Time.frameCount;
@@ -404,7 +300,6 @@ public sealed partial class AmethystMenu : MonoBehaviour
             if (_ax < 0f) _ax = 0f;
         }
 
-        // 收尾判定同参考实现：贴近 0 或超过 0.7s 保险时间就彻底结束
         if (closing && (_ax <= 0.02f || now - _closeAt > 0.7f))
         {
             _open = false; _closeAt = -1f; _collapsed = false;
@@ -414,16 +309,13 @@ public sealed partial class AmethystMenu : MonoBehaviour
 
         float lean = Mathf.Clamp01(_ax * 1.35f);
         float fade = SmoothSat(lean);
-        float xs = Mathf.Min(_ax, 1.12f);               // 过冲上限 12%
-        float veil = Mathf.Clamp01(_ax);                // 背景遮罩用线性值（同参考实现）
-        float lift = (1f - xs) * 26f;                   // 起始下移 26px，随后向上落位
-        if (closing) lift = (1f - xs) * 12f;            // 关闭只下坠
-        // Onyx 用的是 `shown.m_YMin += Ui.Round(lift)`：位移必须落在整像素上。
-        // 小数位移会让字形在亚像素位置反复重采样 —— 实机表现就是打开时"文字像素偏移/发虚"。
+        float xs = Mathf.Min(_ax, 1.12f);               
+        float veil = Mathf.Clamp01(_ax);                
+        float lift = (1f - xs) * 26f;                   
+        if (closing) lift = (1f - xs) * 12f;            
+        
         float liftPx = Mathf.Round(lift);
-        // 开场光晕：**跟着淡入一起出现**，不再抢在窗口之前。
-        // 旧写法在开菜单的第一帧就把光晕打满（那时窗口还是全透明、遮罩也还没上），
-        // 实机表现就是"先闪一团紫、窗口才出来" —— 即反馈里的"打开瞬间的撕裂感"。
+        
         float f0 = Mathf.Clamp01(1f - _ax);
         float flare = closing ? 0f : fade * f0 * f0;
         _fade = fade;
@@ -433,40 +325,19 @@ public sealed partial class AmethystMenu : MonoBehaviour
         if (Mobile) CenterWindow(vw, vh);
         else
         {
-            // 第 167 轮：无条件裁剪。拖动（HandleDrag）夹取的是**同一组边界**，
-            //   两边结果幂等，不会再像 `GUI.DragWindow` 那样互相覆盖。
+            
             ClampWindow(vw, vh);
             if (fade >= 1f && AnimSettled) HandleResize(vw, vh);
         }
 
-        // ⚠ 第 167 轮（最终位置）：拖动必须在 `GUI.Window` **之前**处理。
-        //   之前失败的两个原因都已定位：
-        //     1) 放在 `GUI.Window` **之后**：窗口内任何 `GUI.Button` 在 MouseDown 时都会
-        //        `Event.Use()`，事件类型变成 `Used`。标题栏上一点就可能已被消费，
-        //        `e.type == MouseDown` 不成立 → **完全拖不动**；
-        //        剩下能触发的只有边缘 8px 的 HandleResize → 表现就是「只会拉长窗口」。
-        //     2) 放在窗口回调**内部**：回调结束后 `GUI.Window` 会把窗口矩形作为返回值
-        //        赋回 `_window`，回调里改的位置同帧被覆盖 → 同样拖不动。
-        //   放在这里则两全：`_window` 先改后画（`GUI.Window` 原样返回传入的矩形），
-        //   而事件此时还没被任何控件消费。
-        //   HandleResize 在上一行先跑：鼠标落在边缘 8px 内时它已 `Use()` 掉事件，
-        //   这里就看不到 MouseDown —— 缩放优先于拖动，正是想要的优先级。
         HandleDrag(vw, vh);
 
-        // 开场光晕 / 窗口投影（第 248 轮：改成 OnyxMenu 的圆角矩形 SDF 光晕）
-        // 旧实现是一张 128² 的**径向**白色贴图 `StretchToFill` 铺到窗口矩形上，
-        // 拉伸后必然变成"椭圆一团"，在宽窗口上尤其明显（这就是实机看到的"紫色椭圆"）。
-        // 现在走 `AmethystStyle.Halo`：贴图本身按**圆角矩形距离场**生成，九宫格拉伸，
-        // 无论窗口多宽多高，光晕都始终贴着圆角外缘，形状不会变形。
         if (flare > 0.02f || fade > 0.02f)
         {
-            // Onyx 几何：纹理边长 = (Reach+Bend)*2+2，九宫格 border = Reach+Bend。
-            // 调用方必须外扩 (Reach+grow)，核心圆角矩形才正好落在窗口边缘；
-            // 只外扩 grow 会让亮核缩进窗口 40px 并被窗口盖住，光晕几乎不可见。
+            
             const int reach = 40, bend = 18;
             float grow = reach + bend;
-            // Onyx：只有"外壳"（投影 / 光晕）从 93.5% 绽放到 100%，正文完全不缩放。
-            // 投影跟着窗口的 lift 走，光晕用窗口原位（与 Onyx 完全一致）。
+            
             float shell = closing ? 1f : 0.935f + 0.065f * xs;
             float gW = _window.width * shell;
             float gH = _window.height * shell;
@@ -483,8 +354,6 @@ public sealed partial class AmethystMenu : MonoBehaviour
                 AmethystStyle.Halo(halo, A(AmethystStyle.Current.Accent, 0.36f * flare), bend, reach);
         }
 
-        // 动画位移：只做"下移回位"（不改尺寸、不改 _window）——
-        // 字号恒定，布局 / 拖动 / 命中判定全部照旧；结束处由 `GUI.matrix = prevMatrix` 恢复。
         if (Mathf.Abs(liftPx) >= 1f)
             GUI.matrix = GUI.matrix * Matrix4x4.Translate(new Vector3(0f, liftPx, 0f));
 
@@ -500,12 +369,6 @@ public sealed partial class AmethystMenu : MonoBehaviour
 
     private const int RzL = 1, RzR = 2, RzT = 4, RzB = 8;
 
-    // 动画是否已完全落定。开合过程中**暂缓"按下即拖"**：
-    // 动画期间画面经过了位移/缩放，而 HandleDrag/HandleResize 是拿鼠标和脚本坐标系的
-    // _window 直接比，不拦住的话"刚打开就拖"会带着最多 26px 的偏移起拖（窗口瞬跳一下）。
-    // 阈值取 0.97 而不是 0.999：弹簧收尾的回摆会短暂跌破 0.999（会来回翻），
-    // 而 0.97 之后的残差是 (1-0.97)*26 ≈ 0.8px 的位移 + 0.2% 的缩放 —— 肉眼不可见。
-    // 缩放原本的门控是 `fade >= 1f`，这里再与落定状态相与。
     private bool AnimSettled => _closeAt < 0f && _ax >= 0.97f;
 
     private void HandleResize(float vw, float vh)
@@ -578,30 +441,12 @@ public sealed partial class AmethystMenu : MonoBehaviour
         _window.x = Mathf.Clamp(_window.x, 0f, Mathf.Max(0f, vw - _window.width));
         _window.y = Mathf.Clamp(_window.y, 0f, Mathf.Max(0f, vh - _window.height));
     }
-// ⚠ 第 166/167 轮：自实现的窗口拖动（替换 `GUI.DragWindow`）。
-    //
-    // 为什么要换掉 `GUI.DragWindow`：
-    //   它把「抓取点相对窗口的偏移」存在自己的内部状态里，每帧用 `鼠标位置 - 偏移`
-    //   算新位置，**完全不理会外部的裁剪**。而 DrawGui 每帧都会 `ClampWindow`
-    //   把窗口夹回可视范围，于是两者互相覆盖同一份位置：
-    //     · 拖到最下边缘时：DragWindow 算出的 y 继续增大，ClampWindow 又把它夹回来，
-    //       两股力每帧对撞 → 窗口在边缘**抖动 / 掉帧**；
-    //     · 继续往左下或右下拖时：DragWindow 内部累积的 y 偏移已经远大于实际位置，
-    //       一旦 x 变化，它就用那个错误的累积值重算整个位置 → 窗口**瞬移**。
-    //
-    // 自实现后位置只有一个来源（**无累加**）：
-    //   按下时记下抓取偏移（鼠标 − 窗口左上角），全程不变；
-    //   每帧 `鼠标 − 抓取偏移` 得到目标位置，再夹到可视范围。
-    //   夹取只改窗口位置、**不污染抓取偏移**，所以顶到边缘后继续左右拖，
-    //   另一个轴会稳稳停在边缘，不会再跳。
-    //
-    // 调用位置：DrawGui 里 `GUI.Window` 之**前**（原因见那里的注释）。
+
     private void HandleDrag(float vw, float vh)
     {
         Event e = Event.current;
         if (e == null) return;
 
-        // 兜底：鼠标在游戏窗口外松开时收不到 MouseUp，用输入状态解除拖动，避免"粘住"。
         if (_dragging && e.type != EventType.MouseUp && !Input.GetMouseButton(0))
         {
             _dragging = false;
@@ -612,24 +457,15 @@ public sealed partial class AmethystMenu : MonoBehaviour
         {
             if (e.type != EventType.MouseDown || e.button != 0 || !AnimSettled) return;
 
-            // 这里是 `GUI.Window` 之后，`mousePosition` 与 `_window` 属于**同一套 GUI 坐标**，
-            // 所以先换算成窗口本地坐标，再判断「是不是按在标题栏上」。
-            // （第 166 轮的错误就是拿整屏坐标直接和 HeaderH 这种**本地**尺寸比 —— 永远不成立。）
             Vector2 m = e.mousePosition;
             float lx = m.x - _window.x;
             float ly = m.y - _window.y;
 
-            // 右上一小块留给最小化 / 关闭按钮。
-            // 按钮自己会 `Event.Use()` 消费掉按下（事件类型变成 Used），因此点在按钮上时
-            // 根本走不到这里；这个范围判断只是双保险。
             if (lx < 0f || lx >= _window.width - 110f) return;
             if (ly < 0f || ly >= HeaderH) return;
 
             _dragging = true;
-            // 抓取点 = 按下瞬间鼠标在窗口内的**本地**偏移（上面的 lx / ly 已经算好）。
-            // 之后每帧都用 `鼠标 - 抓取点` **直接**算出窗口位置，不做任何累加；
-            // 夹取只作用于算出来的结果，**不污染** _dragGrab ——
-            // 这正是「顶到边缘后继续往左下/右下拖不会瞬移」的关键。
+            
             _dragGrab = new Vector2(lx, ly);
             e.Use();
             return;
@@ -651,11 +487,6 @@ public sealed partial class AmethystMenu : MonoBehaviour
         }
     }
 
-    // ⚠ 第 167 轮（修正）：拖动**不能**放在这个回调里。
-    //   DrawGui 里是 `_window = GUI.Window(WindowId, _window, _winFn, ...)` ——
-    //   `GUI.Window` 调用完本回调后，会把**它自己**的窗口矩形作为返回值赋回 `_window`，
-    //   于是回调内部对 `_window` 的修改会在同一帧被覆盖掉，表现就是「怎么拖都不动」。
-    //   所以这里只负责画；拖动统一由 DrawGui 在 `GUI.Window` 返回**之后**执行（见 HandleDrag）。
     private void DrawWindow(int id)
     {
         AmethystPalette p = AmethystStyle.Current;
@@ -663,16 +494,13 @@ public sealed partial class AmethystMenu : MonoBehaviour
         float h = _window.height;
         GUI.color = new Color(1f, 1f, 1f, _fade);
 
-        // 第 289 轮：窗口描边改为「外层 1px 填充 + 内层窗口填充」。
-        // 旧 StrokeRounded 的 9-slice 1px 边在圆角处会产生忽粗忽细的锯齿（用户反馈的“边缘怪怪的”）。
         AmethystStyle.FillRounded(new Rect(0f, 0f, w, h), A(Color.white, 0.07f), 14);
         AmethystStyle.FillRounded(new Rect(1f, 1f, w - 2f, h - 2f),
             new Color(p.Window.r, p.Window.g, p.Window.b, 0.90f), 13);
         AmethystStyle.Fill(new Rect(14f, 1f, w - 28f, 1f), A(Color.white, 0.05f));
 
         DrawHeader(w, p);
-        // 折叠状态下整个窗口就是标题栏，拖动由 DrawGui 里的 HandleDrag 统一处理
-        // （第 166 轮：这里原来调用 GUI.DragWindow）。
+        
         if (_collapsed) return;
 
         float sbTop = HeaderH + 8f;
@@ -705,8 +533,6 @@ public sealed partial class AmethystMenu : MonoBehaviour
             GUI.color = keepPill;
         }
 
-        // 第 250 轮：照抄 Onyx `RailItem` —— 每行从左侧 14px 滑入、0.026s 错峰，
-        // act 由行中心到滑块中心的距离得出（0..1），滑块滑动时颜色/底色跟着过渡。
         float ty = tabTop;
         for (int i = 0; i < Tabs.Length; i++)
         {
@@ -728,10 +554,6 @@ public sealed partial class AmethystMenu : MonoBehaviour
             GUI.color = keepTab;
         }
 
-        // ===== 分区标题：交叉淡入 + 纵向滑动（第 248 轮，取 OM 的 0.26s 节奏）=====
-        // 页签变了才启动一次过渡：旧标题上移 7px 淡出，新标题从下方 7px 浮上来淡入，
-        // 全程套一层 `Ent(0.16,0.32)` 上浮 8px，所以"开菜单"和"切页签"都有同一套落位感。
-        // 宽度取 `w - SidebarW - 56`（右侧留出滚动条与窗口边距），文本不会压到内容区。
         float nowT = Time.unscaledTime;
         string sec = _tab < Tabs.Length ? Tabs[_tab].Name : AmethystText.T("Settings");
         if (!string.Equals(sec, _titleNow))
@@ -741,7 +563,7 @@ public sealed partial class AmethystMenu : MonoBehaviour
             _titleAt = nowT;
             _titleClock = 0f;
         }
-        // 第 282 轮：标题交叉淡入同样用累计限幅帧时间。
+        
         float tw = Mathf.Clamp01(_titleClock / 0.26f);
         float ti = 1f - tw;
         float te = 1f - ti * ti * ti;
@@ -769,7 +591,7 @@ public sealed partial class AmethystMenu : MonoBehaviour
         var area = new Rect(SidebarW, HeaderH + 40f, w - SidebarW - 16f, h - HeaderH - 40f - FooterH);
         if (Event.current != null && Event.current.type == EventType.Layout && _scrollFrame != Time.frameCount)
         {
-            // 第 250 轮：滚轮 / 拖动改成 Onyx 的指数平滑（exp -18），不再"一格一跳"。
+            
             _scrollFrame = Time.frameCount;
             _scrollGoal = Mathf.Clamp(_scrollGoal + _scrollPending, 0f, _maxScroll);
             _scrollPending = 0f;
@@ -808,17 +630,12 @@ public sealed partial class AmethystMenu : MonoBehaviour
             }
         }
 
-        // ===== 第 249 轮：完全对齐 Onyx 的卡片级联（cascade）=====
-        // 旧实现是整页一起下移 30px 再上浮；Onyx 是每张卡各自错峰 0.035s、上浮 12px（取整）。
-        // Onyx 不做“整页一起上浮”：每张卡按 0.035s 错峰、上浮 12px（取整）并淡入，
-        // 分区标题（Sub）保持原样立即出现。开菜单延迟 0.12s，切页签立即开始。
         _cascade = -100f;
         if (_tabAnimAt >= 0f)
         {
             float age = _tabClock - _tabLag;
             if (age >= 0.5f) _tabAnimAt = -1f;
-            // 负值也要赋值：Onyx 用负数让卡片在 tabLag 期间保持 alpha=0 等待，
-            // 否则开菜单前 0.12s 卡片会先全亮再突然消失重放。
+            
             else _cascade = age;
         }
         _cardIdx = 0;
@@ -828,12 +645,10 @@ public sealed partial class AmethystMenu : MonoBehaviour
         GUI.color = new Color(cPrev.r, cPrev.g, cPrev.b, cPrev.a * cAlpha);
         GUI.BeginGroup(area);
 
-        // 这几个局部变量在 try 之后（滚动条计算与页脚）仍要使用，
-        // 因此必须声明在 try 之外，否则会超出作用域。
         float x = 4f;
         float cx = x;
         float cw = area.width - 20f;
-        float startY = 6f - _scroll;   // 内容起始 Y（级联上浮由每张卡自己处理）
+        float startY = 6f - _scroll;   
         float cy = startY;
 
         try
@@ -843,7 +658,7 @@ public sealed partial class AmethystMenu : MonoBehaviour
             _viewH = area.height;
             var localArea = new Rect(0f, 0f, area.width, area.height);
             _cardGrp = -1;
-            BeginCardGrid(x, startY, cw);   // 第 204 轮：卡片两列瀑布（宽度不够时自动退回单列）
+            BeginCardGrid(x, startY, cw);   
             switch (_tab)
             {
                 case 0: DrawHome(cx, ref cy, cw); break;
@@ -855,21 +670,19 @@ public sealed partial class AmethystMenu : MonoBehaviour
                 case 6: DrawSettings(cx, ref cy, cw); break;
                 default: DrawEmpty(localArea, AmethystIcon.Star, AmethystText.T("SectionInProgress")); break;
             }
-            _cardGrp = -1; // 恢复全放行，避免任何未配对的 Grp 泄漏到页脚计算
+            _cardGrp = -1; 
         }
         catch (System.Exception ex)
         {
-            // 单个页签画崩不能拖垮整个菜单：记日志并保证下面的 GUI.EndGroup() 一定会执行。
-            // （之前「设置」页的 IndexOutOfRangeException 就是在这里抛出的 ——
-            //   异常跳过了 EndGroup，IMGUI 组状态被破坏。）
+            
             try { AmethystPlugin.Logger?.LogWarning($"menu tab {_tab} draw failed: {ex}"); } catch { }
         }
         finally
         {
             _inScroll = false;
-            // 第 249 轮：卡片级联的逐卡 alpha 必须在 EndGroup 前还原，否则会漏到页脚 / 滚动条。
+            
             if (_cardTintOn) { GUI.color = _cardOuter; _cardTintOn = false; }
-            EndCardGrid(ref cy);   // 第 204 轮：滚动高度取两列里更高的那列（必须在 EndGroup 之前，cy 是外层局部变量）
+            EndCardGrid(ref cy);   
             GUI.EndGroup();
             GUI.color = cPrev;
         }
@@ -898,17 +711,12 @@ public sealed partial class AmethystMenu : MonoBehaviour
             for (int gj = 0; gj <= gi; gj++)
                 AmethystStyle.Fill(new Rect(w - 8f - gj * 4f, h - 8f - gi * 4f, 2f, 2f), grip);
 
-        // ⚠ 第 166/167 轮：这里原来调用 `GUI.DragWindow(new Rect(0f, 0f, w, HeaderH))`。
-        //   它和 DrawGui 每帧执行的 ClampWindow 会互相覆盖同一份位置，
-        //   正是「拖到最下边缘后左右拖会瞬移」与边缘抖动的根源 ——
-        //   详见 HandleDrag 的注释。
-        //   拖动现在由 DrawWindow 末尾的 HandleDrag 在窗口内部统一处理（本地坐标）。
     }
 
     [HideFromIl2Cpp]
     private void DrawHeader(float w, AmethystPalette p)
     {
-        // 第 249 轮：文字入场与 Onyx 一致 —— 品牌从左侧 10px 处滑入并淡入（0.04s 起手）。
+        
         float eBrand = Ent(0.04f, 0.3f);
         _brand.wordWrap = false;
         Color keepHdr = GUI.color;
@@ -926,7 +734,6 @@ public sealed partial class AmethystMenu : MonoBehaviour
             _verPill.normal.textColor = ocUp;
         }
 
-        // 版本号从下 6px 浮入（Onyx 的 `Ent(0.10, 0.3)` 同值）。
         float eChip = Ent(0.10f, 0.3f);
         var ver = new Rect(w - 168f, 20f + Mathf.Round(-6f * (1f - eChip)), 62f, 24f);
         GUI.color = new Color(keepHdr.r, keepHdr.g, keepHdr.b, keepHdr.a * eChip);
@@ -936,7 +743,7 @@ public sealed partial class AmethystMenu : MonoBehaviour
 
         var minB = new Rect(w - 96f, 20f, 26f, 24f);
         var closeB = new Rect(w - 62f, 20f, 26f, 24f);
-        // 与 Onyx 第 1023 行同值：右上角按钮 0.16s 起手、0.30s 落位。
+        
         GUI.color = new Color(keepHdr.r, keepHdr.g, keepHdr.b, keepHdr.a * Ent(0.16f, 0.3f));
         if (WindowButton(minB, AmethystIcon.Minimize, p)) _collapsed = !_collapsed;
         if (WindowButton(closeB, AmethystIcon.Close, p)) RequestClose();
@@ -971,11 +778,6 @@ public sealed partial class AmethystMenu : MonoBehaviour
         AmethystStyle.FillRounded(new Rect(r.x + 3f, r.y + 8f, 3f, r.height - 16f), p.Accent, 2);
     }
 
-    // 第 250 轮：完全照抄 Onyx `RailItem` 的三件事 ——
-    //   · 入场：整行从左侧 14px 滑入（位移取整）+ 淡入，逐项 0.026s 错峰；
-    //   · 选中态不是布尔值，而是"行中心与滑块中心的距离" act（0..1），
-    //     滑块滑动时图标/文字/悬停底色连续过渡，而不是瞬间切换；
-    //   · 命中判定始终用最终位置 r，滑动过程中不会点空。
     private void DrawTab(Rect r, float slide, int index, AmethystIcon icon, string label, float act)
     {
         AmethystPalette p = AmethystStyle.Current;
@@ -991,8 +793,7 @@ public sealed partial class AmethystMenu : MonoBehaviour
 
         Color baseInk = hover ? A(p.Text, 0.95f) : A(p.Text, 0.62f);
         Color ink = Color.Lerp(baseInk, p.Accent, act);
-        // 第 289 轮：删除图标后面的 28×28 紫色圆斑。
-        // 选中态已经有 DrawTabHighlight 的整行胶囊滑块，再叠一个圆斑就是用户说的“文字旁边那个图像好丑”。
+        
         AmethystIcons.Draw(icon, new Rect(d.x + 14f, d.y + d.height / 2f - 9f, 18f, 18f), ink);
         _tabStyle.normal.textColor = on ? p.Text : (hover ? A(p.Text, 0.92f) : A(p.Text, 0.66f));
         GUI.Label(new Rect(d.x + 44f, d.y, d.width - 48f, d.height), label, _tabStyle);
@@ -1012,21 +813,10 @@ private bool _inScroll;
     private readonly Dictionary<string, bool> _cardCollapsed = new Dictionary<string, bool>();
     private readonly HashSet<string> _knownCards = new HashSet<string>();
 
-    // ===== 第 204 轮：卡片**多列**排版（参考 ElysiumModMenu 的 block 布局）=====
-    //
-    // 问题：以前所有卡片都"一个接一个往下堆"（`y = card.yMax + 14f`），
-    //   「防作弊」页光开关就三十几行 ⇒ 一根又长又窄的竖条，很不好看。
-    //
-    // 做法（抄 ElysiumModMenu `uimenu/SelfChatCompactTab.cs` 的思路：
-    //   它是 `columns = contentWidth >= 560f ? 3 : 2` 然后把若干 block 并排放）：
-    //   · 内容够宽 → 分两列，每张卡放进**当前较矮的那一列**（最短列优先），
-    //     两列高度自然平衡；不够宽 → 退回单列，行为与旧版完全一致。
-    //   · body 特别高的卡（逐 RPC 开关那种 30+ 行）**跨整行**，
-    //     否则会出现一根又窄又高的柱子、另一列全空着。
     private const float CardGapX = 12f;
     private const float CardGapY = 12f;
-    private const float GridTwoColsMinW = 620f;   // 内容宽度达到这个值才分两列
-    private const float FullSpanBodyH = 560f;     // body 超过这个高度就跨整行
+    private const float GridTwoColsMinW = 620f;   
+    private const float FullSpanBodyH = 560f;     
     private int _cardCols = 1;
     private readonly float[] _cardColY = new float[2];
     private readonly float[] _cardColX = new float[2];
@@ -1041,13 +831,10 @@ private bool _inScroll;
         _cardColX[1] = x + _cardColW + CardGapX;
         _cardColY[0] = startY;
         _cardColY[1] = startY;
-        // ⚠ 两列的**起始高度不在这里定**：页签开头还有 `SubBar`（子标签栏）等
-        //   会先推进调用方的 y。真正的高度由 `Card` 第一次被调用时的 y 决定，
-        //   否则第一张卡会压在子标签栏上面。见 Card 里的 `_cardGridInit`。
+        
         _cardGridInit = false;
     }
 
-    // 网格模式下滚动高度要按**两列里更高的一列**算，否则下面那列会被滚动条截掉。
     private void EndCardGrid(ref float y)
     {
         if (_cardCols <= 1) return;
@@ -1062,22 +849,15 @@ private bool _inScroll;
         AmethystPalette p = AmethystStyle.Current;
         const float head = 44f;
 
-        // 第 249 轮：上一张卡的级联 alpha 在这里还原 —— 卡片正文由调用方在本次返回之后绘制。
         if (_cardTintOn) { GUI.color = _cardOuter; _cardTintOn = false; }
 
         if (_cardGrp >= 0 && _cardGrp != _subTab[SubTabSlot()])
             return new Rect(-20000f, -20000f, w - 36f, bodyH);
 
-        if (!_knownCards.Contains(title)) _knownCards.Add(title);   // 抄 OnyxMenu：去重，避免每帧重复添加
+        if (!_knownCards.Contains(title)) _knownCards.Add(title);   
         _cardCollapsed.TryGetValue(title, out bool collapsed);
         float shownBody = collapsed ? 0f : bodyH;
 
-        // ---- 第 204 轮：两列瀑布式落位 ----
-        // 单列时 `cardX/cardY` 就是调用方给的 x/y，行为与旧版一字不差；
-        // 两列时忽略调用方的 y，改用"较矮那一列"的当前底边。
-        //
-        // ⚠ 两列的起始高度用**第一次调用 Card 时的 y**，而不是 BeginCardGrid 里的 startY：
-        //   页签开头 `SubBar(...)` 会把 y 往下推（子标签栏），用 startY 会让第一张卡压上去。
         bool grid = _cardCols > 1;
         if (grid && !_cardGridInit)
         {
@@ -1086,7 +866,7 @@ private bool _inScroll;
             _cardColY[1] = y;
         }
 
-        bool span = grid && shownBody >= FullSpanBodyH;      // 跨整行
+        bool span = grid && shownBody >= FullSpanBodyH;      
         int col = 0;
         float cardX = x;
         float cardW = w;
@@ -1107,8 +887,6 @@ private bool _inScroll;
             cardY = y;
         }
 
-        // 第 249 轮：Onyx 卡片级联 —— 每张卡错峰 0.035s（索引封顶 6），
-        // 上浮 12px 且位移取整，整张卡（含正文文字）一起淡入。
         float cascadeRise = 0f;
         if (_cascade > -100f)
         {
@@ -1145,8 +923,6 @@ private bool _inScroll;
             if (!collapsed) AmethystStyle.Fill(new Rect(card.x + 18f, card.y + head - 1f, card.width - 36f, 1f), A(Color.white, 0.05f));
         }
 
-        // 推进落位游标：两列各推自己那根；跨整行的把两列一起推到同一高度。
-        // 布局游标用**未上浮**的底边：卡片只在绘制时上浮，避免级联期间整页跟着抖。
         float cardBottom = cardY + card.height;
         float nextY = cardBottom + (grid ? CardGapY : 14f);
         if (grid && span) { _cardColY[0] = nextY; _cardColY[1] = nextY; }
@@ -1188,7 +964,7 @@ private bool _inScroll;
     private static readonly string[] GuardSubs = { "GuardSubLists", "GuardSubFilters", "GuardSubShield", "GuardSubPerRpc" };
 
     [HideFromIl2Cpp]
-    // 当前页签的子标签槽位；越界时退化为 0，避免任何索引问题把整页画崩。
+    
     private int SubTabSlot() => _tab >= 0 && _tab < _subTab.Length ? _tab : 0;
 
     [HideFromIl2Cpp]
@@ -1205,16 +981,11 @@ private bool _inScroll;
         int rows = Mathf.CeilToInt(names.Length / (float)cols);
         float cellW = (w - (cols - 1) * 6f) / cols;
 
-        // ===== 滑动高亮（第 221 轮，参考 OM 的子标签）=====
-        // 旧实现是"每一格自己亮/灭"，切换时高亮直接跳过去；现在改成一块会滑动的高亮：
-        // 目标 = 当前子标签的格子，用与主标签 `_tabHi` 相同的指数趋近逼近，切换时平滑滑过去。
-        // 每个页签槽位各记一份位置（`_subHi[slot]`），切回来时不会从头再滑一遍。
         var active = new Rect(x + (cur % cols) * (cellW + 6f), y + (cur / cols) * 32f, cellW, 28f);
         if (!_subHiInit[slot]) { _subHi[slot] = active; _subHiInit[slot] = true; }
         else if (Event.current != null && Event.current.type == EventType.Repaint)
             _subHi[slot] = LerpRect(_subHi[slot], active, 1f - Mathf.Exp(-16f * Time.unscaledDeltaTime));
 
-        // 1) 每格的基础底（未选中样式）
         for (int i = 0; i < names.Length; i++)
         {
             var r = new Rect(x + (i % cols) * (cellW + 6f), y + (i / cols) * 32f, cellW, 28f);
@@ -1223,21 +994,18 @@ private bool _inScroll;
             AmethystStyle.StrokeRounded(r, A(Color.white, 0.07f), 8, 1);
         }
 
-        // 2) 滑动高亮（压在标签下面）
         if (!Cull(_subHi[slot].y, _subHi[slot].height))
         {
             AmethystStyle.FillRounded(_subHi[slot], A(p.Accent, 0.20f), 8);
             AmethystStyle.StrokeRounded(_subHi[slot], A(p.Accent, 0.65f), 8, 1);
         }
 
-        // 3) 标签 + 点击
         for (int i = 0; i < names.Length; i++)
         {
             var r = new Rect(x + (i % cols) * (cellW + 6f), y + (i / cols) * 32f, cellW, 28f);
             if (Cull(r.y, r.height)) continue;
             bool on = cur == i;
-            // Onyx 的做法：滑块中心盖住哪个格子，哪个格子的文字才变亮。
-            // 这样滑块滑过去时文字是"被点亮"的，而不是瞬间跳色。
+            
             bool lit = _subHi[slot].Contains(new Vector2(r.x + r.width * 0.5f, r.y + r.height * 0.5f));
             _subTabStyle.normal.textColor = lit ? Color.Lerp(p.Accent, Color.white, 0.5f) : p.Muted;
             GUI.Label(r, names[i], _subTabStyle);
@@ -1247,7 +1015,7 @@ private bool _inScroll;
                 _scroll = 0f;
                 _scrollPending = 0f;
                 _scrollGoal = 0f;
-                // 与 Onyx 一致：切子标签也重放一次卡片级联。
+                
                 _tabAnimAt = Time.unscaledTime;
                 _tabLag = 0f;
             }
@@ -1279,8 +1047,7 @@ private bool _inScroll;
         Grp(0);
         ListCard(x, ref y, w, AmethystText.T("BanList"), AmethystAccess.BanEntries, AmethystAccess.RemoveBan);
         Grp(0);
-        // 第 215 轮：云端名单同样每行带 ✕，可手动删除不需要的条目。
-        // 删除只改本地 CloudBanList.txt —— 再次「获取云端封禁名单」仍以服务器数据为准（整体覆盖）。
+        
         ListCard(x, ref y, w, AmethystText.T("CloudBanList"), AmethystAccess.CloudBanEntries, AmethystAccess.RemoveCloudBan);
         Grp(0);
         RecentCard(x, ref y, w);
@@ -1305,26 +1072,11 @@ private bool _inScroll;
         }
 
         Grp(2);
-        // ⚠ 第 165 轮：本卡片高度 +50f —— 「洪水阈值/秒」滑块（SliderInt 占 26+24 = 50px）
-        //   从下面那张「逐个 RPC 开关」卡片**之外**挪进了这里。
-        //   原先它被写在 36 项开关之后，但 `by` 早已越过 `Card(...)` 返回的 body 区域底部，
-        //   而 SliderInt 是不做 Cull 的 —— 于是滑块被画到卡片下方、压在其它 UI 上，
-        //   就是用户看到的「洪水阈值卡在下面 UI 上、位置错误」。
-        // 严格精确计算卡片高度（每行 RowH=24f，外加滑块展开与卡片内部留白）
-        // 统计卡片内所有项目：
-        // 1. AntiCheatMaster (Toggle) -> 1
-        // 2. DropRPCsHost (HostAwareToggle) -> 1
-        // 3. ReactToCheater (ActionCycle) -> 1
-        // 4. CheaterActionThreshold (SliderInt, 动态展开) -> 50f
-        // 5. RPCFloodDetectionNotifyOnly (Toggle) -> 1
-        // 6. FloodThresholdSec (SliderInt) -> 50f
-        // 7-28. 其它各类独立防护 Toggle -> 22项（含防止+检测两个独立开关）
-        // 总计：26 项单行 (Toggle / CycleRow) + 洪水滑块 (50f) + 缓冲留白 (50f)
-        // ⚠ 第 219 轮：新增「识别外来模组」一项 ⇒ 25 → 26，注释里的区间同步改。
+        
         int rowItemsCount = 31;
         float hostCardH = rowItemsCount * RowH + 50f + 50f + 3f * 26f;
         if (AmethystConfig.RpcGuardAction.Value == "Kick" || AmethystConfig.RpcGuardAction.Value == "Ban")
-            hostCardH += 50f; // 处罚门槛滑块展开(+50f)
+            hostCardH += 50f; 
 
         b = Card(x, ref y, w, AmethystText.T("RPCAnticheatHost"), hostCardH);
         by = b.y;
@@ -1338,13 +1090,12 @@ private bool _inScroll;
             SliderInt(b.x, ref by, b.width, AmethystText.T("CheaterActionThreshold"), AmethystConfig.CheaterActionThreshold, 1, 8);
         }
         Toggle(b.x, ref by, b.width, AmethystText.T("RPCFloodDetectionNotifyOnly"), AmethystConfig.RpcFloodDetect);
-        // 第 165 轮：洪水阈值紧跟它自己的开关，保证画在本卡片 body 之内（不再溢出到卡片外）。
+        
         SliderInt(b.x, ref by, b.width, AmethystText.T("FloodThresholdSec"), AmethystConfig.RpcFloodThreshold, 25, 500);
 
         Sub(b.x, ref by, b.width, AmethystText.T("GuardGroupCheck"));
         Toggle(b.x, ref by, b.width, AmethystText.T("DetectModClients"), AmethystConfig.ModClientDetection);
-        // 第 219 轮 #3：识别**别人**用的模组（已知 ID 表 + 通用启发式）。
-        //   与上面那条不同：上面那条只认「同为 Amethyst 的客户端」，这条认的是各种外来模组。
+        
         Toggle(b.x, ref by, b.width, AmethystText.T("ForeignModDetect"), AmethystConfig.ForeignModDetect);
         Toggle(b.x, ref by, b.width, AmethystText.T("BypassDisconnectPenalty"), AmethystConfig.BypassDisconnectPenalty);
         Toggle(b.x, ref by, b.width, AmethystText.T("DetectHostTempBan"), AmethystConfig.DetectHostTempBan);
@@ -1365,7 +1116,7 @@ private bool _inScroll;
         Slider(b.x, ref by, b.width, AmethystText.T("GuardSabotageRepairDist"), AmethystConfig.SabotageRepairDistance, 0.5f, 10f, "0.0", 0.1f);
         Toggle(b.x, ref by, b.width, AmethystText.T("GuardNoImpostorEnd"), AmethystConfig.NoImpostorGameOver);
         Toggle(b.x, ref by, b.width, AmethystText.T("GuardDoorSpam"), AmethystConfig.DoorSpamGuard);
-        // 阻止遥测只保留「设置 → 界面」里的一个开关（原来这里与 BlockTelemetryData 重复）。
+        
         Toggle(b.x, ref by, b.width, AmethystText.T("GuardSecurityNotify"), AmethystConfig.SecurityNotify);
 
         Sub(b.x, ref by, b.width, AmethystText.T("GuardGroupRpc"));
@@ -1375,23 +1126,19 @@ private bool _inScroll;
         Toggle(b.x, ref by, b.width, AmethystText.T("GuardRpcVoteBan"), AmethystConfig.RpcGuardVoteBan);
         Toggle(b.x, ref by, b.width, AmethystText.T("GuardRpcGameData"), AmethystConfig.RpcGameDataCheck);
         Toggle(b.x, ref by, b.width, AmethystText.T("GuardUnknownRpc"), AmethystConfig.UnknownRpcGuard);
-            // ===== 逐 RPC 开关（36 项，第 158 轮）=====
+            
             Grp(2);
-            Grp(3);   // 逐 RPC 开关放到独立页签
+            Grp(3);   
         b = Card(x, ref y, w, AmethystText.T("GuardRpcPerCall"), AmethystConfig.RpcCallNames.Length * RowH + 24f);
             by = b.y;
             for (int ri = 0; ri < AmethystConfig.RpcCallNames.Length; ri++)
             {
                 string rn = AmethystConfig.RpcCallNames[ri];
                 if (AmethystConfig.RpcCallSwitches.TryGetValue(rn, out var rcfg) && rcfg != null)
-                    // ⚠ 第 164 轮：这里原来直接把 RPC 名（AddVote / Shapeshift / …）当标签用，
-                    //   于是菜单里那 36 行全是英文 key，中文/俄语用户看到的也是一堆英文。
-                    //   三份 lang 已补齐这 36 个 key，这里走 T() 取当前语言文案。
+                    
                     Toggle(b.x, ref by, b.width, AmethystText.T(rn), rcfg);
             }
-        // （第 165 轮：「洪水阈值/秒」滑块原先在这里 —— 位置在 `Card(...)` 返回的 body 之外，
-        //   会溢出并压在下方 UI 上；现已上移到 RPC 反作弊卡片里、紧跟在洪水检测开关之后。）
-
+        
         Grp(2);
         b = Card(x, ref y, w, AmethystText.T("AntiBan"), 2f * RowH + 42f);
         by = b.y;
@@ -1400,18 +1147,16 @@ private bool _inScroll;
         GUI.Label(new Rect(b.x + 2f, by, b.width - 2f, 36f), AmethystText.T("KillsTheCrashBanVentKickPacketOffHostItIsAlwaysO"), _muted);
 
         Grp(2);
-        // 第 241 轮：网络防护（按 Hydra 2.1.0 补齐）
-        //   强制 DTLS / 拦截服务器位置更新 / 拦截未授权系统更新 / 防护 ReportDeadBody 崩溃
-        b = Card(x, ref y, w, AmethystText.T("NetworkProtection"), 5f * RowH + 20f);
+        
+         b = Card(x, ref y, w, AmethystText.T("NetworkProtection"), 4f * RowH + 20f);
         by = b.y;
         Toggle(b.x, ref by, b.width, AmethystText.T("ForceDTLSEncryption"), AmethystConfig.ForceDtls);
         Toggle(b.x, ref by, b.width, AmethystText.T("BlockServerTeleports"), AmethystConfig.BlockServerTeleports);
         Toggle(b.x, ref by, b.width, AmethystText.T("BlockUnauthorizedUpdates"), AmethystConfig.BlockUnauthorizedUpdates);
-        Toggle(b.x, ref by, b.width, AmethystText.T("BypassShapeshiftRateLimit"), AmethystConfig.BypassShapeshiftRateLimit);
         Toggle(b.x, ref by, b.width, AmethystText.T("ReportDeadBodyCrashGuard"), AmethystConfig.ReportDeadBodyCrashGuard);
 
         Grp(2);
-        // 第 241 轮：防过载（总开关 + 四项子功能）
+        
         b = Card(x, ref y, w, AmethystText.T("AntiOverload"), 6f * RowH + 20f);
         by = b.y;
         Toggle(b.x, ref by, b.width, AmethystText.T("ProtEnabled"), AmethystConfig.AntiOverloadEnabled);
@@ -1422,7 +1167,7 @@ private bool _inScroll;
         Toggle(b.x, ref by, b.width, AmethystText.T("BlockDataFlood"), AmethystConfig.BlockDataFlood);
 
         Grp(2);
-        // 第 241 轮：防踢（总开关 + 投票踢人 + 仅房主 RPC 踢人）
+        
         b = Card(x, ref y, w, AmethystText.T("AntiKick"), 4f * RowH + 20f);
         by = b.y;
         Toggle(b.x, ref by, b.width, AmethystText.T("ProtEnabled"), AmethystConfig.AntiKickEnabled);
@@ -1440,8 +1185,7 @@ private bool _inScroll;
         by = b.y;
         Toggle(b.x, ref by, b.width, AmethystText.T("KickBanInMatchHost"), AmethystConfig.UnlockMatchKickBan);
         Toggle(b.x, ref by, b.width, AmethystText.T("KickSlowJoiners"), AmethystConfig.KickSlowJoiners);
-        // ⚠ "显示平台及等级"（JoinDetect）已按要求移除：模组不再自己发进/离提示，
-        //    玩家正常进/离开完全走原版通知。
+        
     }
     private void DrawDevTab(float x, ref float y, float w)
     {
@@ -1451,7 +1195,6 @@ private bool _inScroll;
         Toggle(b.x, ref by, b.width, AmethystText.T("PerfProbe"), AmethystConfig.PerfProbe);
         Toggle(b.x, ref by, b.width, AmethystText.T("NoWinConditions"), AmethystConfig.NoWinConditions);
 
-        // 职业分配算法：点击循环切换 0..3（默认 / System / Xorshift / Mersenne Twister）。
         if (AmethystConfig.RoleAlgorithm != null)
         {
             int cur = Mathf.Clamp(AmethystConfig.RoleAlgorithm.Value, 0, 3);
@@ -1503,8 +1246,7 @@ private bool _inScroll;
     }
 
     [HideFromIl2Cpp]
-    // ===== 制作人员名单 =====
-    // 内容硬编码在 `Core\AmethystCredits.cs`，不读外部文件、也没有配置项。
+    
     private void DrawCredits(float x, ref float y, float w)
     {
         Grp(0);
@@ -1605,7 +1347,6 @@ private bool _inScroll;
         CycleRow(x, ref y, w, label, disp[i], () => { entry.Value = vals[(i + 1) % vals.Length]; });
     }
 
-    // 颜色循环：显示颜色名（本地化），而不是序号
     [HideFromIl2Cpp]
     private void ColorCycle(float x, ref float y, float w, string label, ConfigEntry<int> entry)
     {
@@ -1688,7 +1429,7 @@ private bool _inScroll;
         string about = AmethystText.T("BAmethystBAnAmongUsAnticheat");
         MeasureHome(about, w);
         Grp(0);
-        // 「关于」只放**模组自己的**信息：版本 / 作者
+        
         Rect b = Card(x, ref y, w, AmethystText.T("About"), _homeAboutH + 2f * 30f + 8f);
         GUI.Label(new Rect(b.x, b.y, b.width, _homeAboutH), about, _rowLabel);
         float by = b.y + _homeAboutH + 8f;
@@ -1696,8 +1437,6 @@ private bool _inScroll;
         InfoRow(b.x, ref by, b.width, AmethystText.T("Author"), "一只屑小紫");
     }
 
-    // 运行环境信息**单独一张卡**。
-    // （之前把它们塞进了「关于」卡里 —— 那卡是讲模组自身的，游戏版本 / 系统放里面确实不合适。）
     private void HomeMoreInfo(float x, ref float y, float w)
     {
         Grp(0);
@@ -1709,7 +1448,6 @@ private bool _inScroll;
         InfoRow(b.x, ref by, b.width, AmethystText.T("ModCount"), AmethystSysInfo.ModCount());
     }
 
-    // 重要提示 + 链接（原本挂在「关于」方法尾部，现在独立成一个方法）
     private void HomeNotices(float x, ref float y, float w)
     {
         string imp = AmethystText.T("ColorFFD166TheModMayConflictWithOtherModsDisable");
@@ -1732,16 +1470,6 @@ private bool _inScroll;
         if (Mathf.Abs(w - _homeTextW) < 0.5f && ReferenceEquals(about, _homeAbout) && ReferenceEquals(imp, _homeImp)) return;
         _homeTextW = w; _homeAbout = about; _homeImp = imp;
 
-        // ⚠ 第 205 轮（修「重要提示」那几行字叠在一起）：
-        //   两列模式下卡片只有**半宽**（`_cardColW`），而原来这里一直按**满宽** `w - 36`
-        //   算 `CalcHeight`。宽度小 ⇒ 折行数变多 ⇒ 实际需要的高度比算出来的大，
-        //   于是文字溢出卡片底部、压到下一张卡上（用户报的"字重在一起"）。
-        //
-        //   所以按"这张卡**实际会用的宽度**"来算：
-        //     · 两列且不跨整行 → `_cardColW - 36`
-        //     · 单列或跨整行   → `w - 36`
-        //   跨整行与否取决于高度本身，是个循环依赖；这里先按窄宽算，
-        //   只有当它高到会跨整行时才按满宽重算（这两个短文本实际上永远不跨）。
         float narrow = (_cardCols > 1 ? _cardColW : w) - 36f;
         _homeAboutH = _rowLabel.CalcHeight(new GUIContent(about), narrow);
         _homeImpH = _rowLabel.CalcHeight(new GUIContent(imp), narrow);
@@ -1768,12 +1496,6 @@ private bool _inScroll;
         y += RowH;
     }
 
-    // ===== 其他功能：子标签（第 221 轮）=====
-    // 原来这一页把所有卡片堆在同一屏（第 206 轮只做过卡内分组），太长也不好找。
-    // 现在参考 OM 的整理方式拆成 5 个子标签（复用 Guard / Settings 已有的 SubBar 机制，
-    // 子标签的滑动高亮、切换时"从下往上"入场都自动生效）：
-    //   冷却与延迟 / 大厅与房间 / 显示与角色 / 界面与外观 / 性能
-    // 开关本身一个没动，只是按主题分页。
     private static readonly string[] OtherSubs = { "OtherSubPing", "OtherSubLobby", "OtherSubDisplay", "OtherSubAppearance", "OtherSubPerf" };
 
     private void DrawOther(float x, ref float y, float w)
@@ -1790,7 +1512,6 @@ private bool _inScroll;
         }
     }
 
-    // ----- 冷却与延迟 -----
     private void DrawOtherPing(float x, ref float y, float w)
     {
         Rect b = Card(x, ref y, w, AmethystText.T("OtherCooldown"), 4f * RowH + 4f);
@@ -1800,7 +1521,6 @@ private bool _inScroll;
         Toggle(b.x, ref by, b.width, AmethystText.T("CooldownDecimals"), AmethystConfig.CooldownDecimals);
         Toggle(b.x, ref by, b.width, AmethystText.T("SabotageCooldownDisplay"), AmethystConfig.SabotageCooldownDisplay);
 
-        // 更好的延迟显示：仅在开启后出现，逐项选择要显示的内容。
         if (AmethystConfig.BetterPingDisplay != null && AmethystConfig.BetterPingDisplay.Value)
         {
             Rect pb = Card(x, ref y, w, AmethystText.T("BetterPingItems"), 5f * RowH + 4f);
@@ -1813,10 +1533,9 @@ private bool _inScroll;
         }
     }
 
-    // ----- 大厅与房间 -----
     private void DrawOtherLobby(float x, ref float y, float w)
     {
-        // ⚠ 第 206 轮：`RoomSortByMaxPlayers` 以前有配置项但**菜单里没有开关**，这里补上。
+        
         Rect b = Card(x, ref y, w, AmethystText.T("OtherLobby"), 8f * RowH + 4f);
         float by = b.y;
         Toggle(b.x, ref by, b.width, AmethystText.T("ExpandLobbySearch"), AmethystConfig.ExpandLobbySearch);
@@ -1828,52 +1547,44 @@ private bool _inScroll;
         Toggle(b.x, ref by, b.width, AmethystText.T("MusicMuteGameMusic"), AmethystConfig.MusicMuteGameMusic);
         Toggle(b.x, ref by, b.width, AmethystText.T("ScaleLobbyPane"), AmethystConfig.ScaleLobbyPane);
 
-        // 抢占颜色（仅大厅）
         b = Card(x, ref y, w, AmethystText.T("ColorSnipe"), 2f * RowH + 8f);
         by = b.y;
         Toggle(b.x, ref by, b.width, AmethystText.T("ColorSnipe"), AmethystConfig.ColorSnipe);
         ColorCycle(b.x, ref by, b.width, AmethystText.T("ColorSnipeId"), AmethystConfig.ColorSnipeId);
     }
 
-    // ----- 显示与角色 -----
     private void DrawOtherDisplay(float x, ref float y, float w)
     {
-        // ===== 颜色与可读性 =====
+        
         Rect b = Card(x, ref y, w, AmethystText.T("OtherColors"), 4f * RowH + 4f);
         float by = b.y;
         Toggle(b.x, ref by, b.width, AmethystText.T("ColorBlindText"), AmethystConfig.ColorBlindText);
         Toggle(b.x, ref by, b.width, AmethystText.T("NameColors"), AmethystConfig.NameColors);
-        // ⚠ 第 172 轮：职业颜色（为原版每个职业渲染独立颜色，参考 EndlessHostRoles）
+        
         Toggle(b.x, ref by, b.width, AmethystText.T("RoleColors"), AmethystConfig.RoleColors);
         Toggle(b.x, ref by, b.width, AmethystText.T("HoverThemeColor"), AmethystConfig.HoverThemeColor);
 
-        // ===== 职业信息 =====
         b = Card(x, ref y, w, AmethystText.T("OtherRoleInfo"), 8f * RowH + 4f);
         by = b.y;
-        // ⚠ 第 176 轮：会议中显示任务面板（参考 AUnlocker）
+        
         Toggle(b.x, ref by, b.width, AmethystText.T("MeetingTaskPanel"), AmethystConfig.MeetingTaskPanel);
         Toggle(b.x, ref by, b.width, AmethystText.T("ShowMeetingHost"), AmethystConfig.ShowMeetingHost);
         Toggle(b.x, ref by, b.width, AmethystText.T("ShowSelfRole"), AmethystConfig.ShowSelfRole);
         Toggle(b.x, ref by, b.width, AmethystText.T("ShowImpostorTeammateRole"), AmethystConfig.ShowImpostorTeammateRole);
         Toggle(b.x, ref by, b.width, AmethystText.T("ShowRolesWhenDead"), AmethystConfig.ShowRolesWhenDead);
-        // ⚠ 第 171 轮：职业信息面板开关（对局内多一个可折叠的职业页签）
+        
         Toggle(b.x, ref by, b.width, AmethystText.T("RolePanel"), AmethystConfig.RolePanel);
         Toggle(b.x, ref by, b.width, AmethystText.T("RoleTag"), AmethystConfig.RoleTag);
         Toggle(b.x, ref by, b.width, AmethystText.T("WinnerRoleReveal"), AmethystConfig.WinnerRoleReveal);
 
-        // 视觉：跳过击杀动画**不属于界面优化**，单独归类
         b = Card(x, ref y, w, AmethystText.T("Visual"), RowH + 20f);
         by = b.y;
         Toggle(b.x, ref by, b.width, AmethystText.T("SkipKillAnimation"), AmethystConfig.SkipKillAnimation);
     }
 
-    // ----- 界面与外观 -----
     private void DrawOtherAppearance(float x, ref float y, float w)
     {
-        // ===== 主菜单与外观 =====
-        // ⚠ 「强制显示开始按钮」开关已移除：该功能改为**硬编码强制生效**
-        //   （位置与显示逻辑见 Patches/OtherFeaturePatches.cs 的 ApplyGameStartBlockLayout），
-        //   不再由配置控制，所以菜单里不该再留一个点了没用的开关。
+        
         Rect b = Card(x, ref y, w, AmethystText.T("OtherMainMenu"), 7f * RowH + 4f);
         float by = b.y;
         Toggle(b.x, ref by, b.width, AmethystText.T("UiTheme"), AmethystConfig.UiTheme);
@@ -1884,21 +1595,21 @@ private bool _inScroll;
         Toggle(b.x, ref by, b.width, AmethystText.T("OutfitSaver"), AmethystConfig.OutfitSaver);
         Toggle(b.x, ref by, b.width, AmethystText.T("RecapInfo"), AmethystConfig.RecapInfo);
 
-        // 显示与身份（不随界面优化联动，各自独立开关）
         bool fpsOn = AmethystConfig.UnlockFps240 != null && AmethystConfig.UnlockFps240.Value;
-        // 开启帧率解锁时多一行滑块（SliderInt 占 50px），卡片高度要跟着变；
-        // 「技能 UI 缩放」也是滑块，同样占 50px。
-        b = Card(x, ref y, w, AmethystText.T("DisplayRoles"), 3f * RowH + 20f + (fpsOn ? 50f : 0f) + 50f);
+        
+        b = Card(x, ref y, w, AmethystText.T("DisplayRoles"), 5f * RowH + 20f + (fpsOn ? 50f : 0f) + 50f);
         by = b.y;
         Toggle(b.x, ref by, b.width, AmethystText.T("UnlockFps"), AmethystConfig.UnlockFps240);
         if (AmethystConfig.UnlockFps240 != null && AmethystConfig.UnlockFps240.Value)
             SliderInt(b.x, ref by, b.width, AmethystText.T("FpsLimit"), AmethystConfig.FpsLimit, 60, 240);
         Toggle(b.x, ref by, b.width, AmethystText.T("AutoReturnToLobby"), AmethystConfig.AutoReturnLobby);
         Toggle(b.x, ref by, b.width, AmethystText.T("UnlockAllCosmetics"), AmethystConfig.UnlockAllCosmetics);
-        // 技能 / 使用 / 击杀 / 报告等动作按钮的缩放（0.1 ~ 1.5，默认 0.85）
+        
         Slider(b.x, ref by, b.width, AmethystText.T("AbilityUiScale"), AmethystConfig.AbilityUiScale, 0.1f, 1.5f, "0.00", 0.01f);
+        Toggle(b.x, ref by, b.width, AmethystText.T("TopRightButtonGroup"), AmethystConfig.TopRightButtonGroup);
+        
+        Toggle(b.x, ref by, b.width, AmethystText.T("ShowKeyGuide"), AmethystConfig.ShowKeyGuide);
 
-        // 聊天（暗黑模式 / 聊天优化保留在此）
         b = Card(x, ref y, w, AmethystText.T("VisualChat"), 4f * RowH + 20f);
         by = b.y;
         Toggle(b.x, ref by, b.width, AmethystText.T("Keep80ChatMessages"), AmethystConfig.ChatHistory80);
@@ -1907,11 +1618,9 @@ private bool _inScroll;
         Toggle(b.x, ref by, b.width, AmethystText.T("DarkChatThemeMatchingCurrentAccent"), AmethystConfig.DarkChatTheme);
     }
 
-    // ----- 性能 -----
     private void DrawOtherPerf(float x, ref float y, float w)
     {
-        // ⚠ 第 173 轮：性能分区（参考 EndlessHostRoles 的 SystemSettings，把影响帧数的开关集中到一处）。
-        //   「不更新死亡玩家」在开启时多一行跳帧数滑块，卡片高度要跟着变。
+        
         bool deadOn = AmethystConfig.PerfDontUpdateDead != null && AmethystConfig.PerfDontUpdateDead.Value;
         Rect b = Card(x, ref y, w, AmethystText.T("PerfSection"), 4f * RowH + 20f + (deadOn ? 50f : 0f));
         float by = b.y;
@@ -1922,7 +1631,6 @@ private bool _inScroll;
         Toggle(b.x, ref by, b.width, AmethystText.T("PerfHideConsole"), AmethystConfig.PerfHideConsole);
     }
 
-    // 一键反作弊：整合除 丢弃RPC / RPC洪水 / 防管道踢人漏洞 之外的反作弊功能
     private static void ApplyAntiCheat(bool on)
     {
         AmethystConfig.RpcGuard.Value = on;
@@ -1936,7 +1644,6 @@ private bool _inScroll;
         AmethystConfig.SpawnFloodGuard.Value = on;
     }
 
-    // 设置子标签：仅保留 界面 与 按键。原 显示 / 其他 已删除，其内容（通知、屏幕菜单按钮、阻止遥测）并入 界面。
     private static readonly string[] SettingsSubs = { "SettingsSubInterface", "SettingsSubKeys" };
     private static readonly int[] SettingsCounts = { 0, 0 };
 
@@ -1955,8 +1662,7 @@ private bool _inScroll;
     private void InterfaceSettings(float x, ref float y, float w)
     {
         Grp(0);
-        // 界面 + 原 显示/其他 子标签的内容（通知、屏幕菜单按钮、阻止遥测）合并于此。
-        // 主题选择器已移除（主题强制为 #A06EFF），所以这里不再需要主题网格的高度。
+        
         Rect b = Card(x, ref y, w, AmethystText.T("Interface"),
             RowH + 50f + 3f * RowH + 24f);
         float by = b.y;
@@ -2038,7 +1744,6 @@ private bool _inScroll;
         {
             entry.Value = !entry.Value;
             
-            // 实时联动：如果点击的是“关闭大厅音乐” (MuteLobbyMusic)，在 UI 点击的瞬间立即执行开播或停播，不需要等切换场景！
             if (string.Equals(entry.Definition.Key, "MuteLobbyMusic", StringComparison.Ordinal))
             {
                 try
@@ -2110,7 +1815,6 @@ private bool _inScroll;
         var labelRect = new Rect(x + w - 58f, y, 54f, 22f);
         y += 26f;
 
-        // step > 0 时在滑条两端各加一个「-」「+」按钮，用来逐格细调
         Rect minus = default, plus = default, track;
         if (step > 0f)
         {
@@ -2178,7 +1882,6 @@ private bool _inScroll;
         y += 24f;
     }
 
-    // 细调按钮点击后立即提交；MenuScale 走 draft 的话要顺手把 draft 状态清掉
     private void CommitSlider(ConfigEntry<float> entry, bool deferred, float v)
     {
         if (deferred)
@@ -2295,9 +1998,6 @@ private bool _inScroll;
     private bool ArrowButton(Rect r, string glyph)
         => StepBtn(r, glyph, AmethystStyle.Current);
 
-    // 主题色板（ThemeCols / ThemeGridHeight / ThemeSwatches）与 SwW/SwH/SwGap 已随
-    // 「移除主题选项」一并删除 —— 主题现在固定为 #A06EFF。
-
 [HideFromIl2Cpp]
     private void CycleRow(float x, ref float y, float w, string label, string valueText, Action onClick, Action onLeft = null)
     {
@@ -2308,11 +2008,10 @@ private bool _inScroll;
 
         if (onLeft != null)
         {
-            // 左右轮调：在右侧提供 [ ◂  值  ▸ ] 的经典精美布局
-            const float aw = 22f;    // 缩短箭头按钮宽度到 22px，更加精致
             
-            // 🚀 智能自适应改进：动态测量文本在屏幕上的实际像素宽度，消除多余大片空白
-            float maxValW = r.width * 0.45f; // 限制值最大占整行宽度的 45%
+            const float aw = 22f;    
+            
+            float maxValW = r.width * 0.45f; 
             float valW = 40f;
             try
             {
@@ -2323,13 +2022,12 @@ private bool _inScroll;
             }
             catch { }
 
-            var rb = new Rect(r.xMax - aw - 4f, r.y + 2f, aw, r.height - 4f); // 右按钮靠最右
-            var lb = new Rect(rb.x - valW - aw, rb.y, aw, rb.height);         // 左按钮根据实际文本宽度 valW 弹性靠左
+            var rb = new Rect(r.xMax - aw - 4f, r.y + 2f, aw, r.height - 4f); 
+            var lb = new Rect(rb.x - valW - aw, rb.y, aw, rb.height);         
             
             if (ArrowButton(lb, "◂")) onLeft();
             if (ArrowButton(rb, "▸")) onClick();
             
-            // 颜色名/数值完美且精致地贴合在 [ ◂ ] 和 [ ▸ ] 两个按钮正中间！
             GUI.Label(new Rect(lb.xMax, r.y, valW, r.height), valueText, _valueC);
         }
         else
@@ -2529,10 +2227,6 @@ private bool _inScroll;
         return c32.r.ToString("X2") + c32.g.ToString("X2") + c32.b.ToString("X2");
     }
 
-    // ===== 第 284 轮：首次打开前的同步预热 =====
-    // 分帧预热保证不了「打开前完成」——日志里 prewarmed=False 连续出现就是证据。
-    // 改为主界面第一次 OnGUI 一次性做完；虽然会把开销放在主界面，
-    // 但用户打开菜单时一定已经就绪。
     private void PrewarmIfNeeded()
     {
         if (_prewarmed) return;
@@ -2578,7 +2272,7 @@ private bool _inScroll;
     private void Build()
     {
         var currentFont = AmethystFont.GetFont();
-        // 允许热更新字体重新构建样式
+        
         if (_built && currentFont == _lastBuiltFont) return;
         _built = true;
         _lastBuiltFont = currentFont;
@@ -2600,10 +2294,10 @@ private bool _inScroll;
         _muted = Label(p.Muted, Mathf.RoundToInt(13 * 1.2f), FontStyle.Normal, TextAnchor.MiddleLeft);
         _footer = Label(p.Muted, Mathf.RoundToInt(12 * 1.2f), FontStyle.Normal, TextAnchor.MiddleLeft);
         _btnLabel = Label(p.Accent, Mathf.RoundToInt(13 * 1.2f), FontStyle.Normal, TextAnchor.MiddleCenter);
-        _centerMuted = Label(A(p.Muted, 0.8f), Mathf.RoundToInt(14 * 1.2f), FontStyle.Normal, TextAnchor.MiddleCenter, customFont: false); // 几何折叠符号 ▸ ▾ 走原字体
-        _arrow = Label(p.Accent, Mathf.RoundToInt(15 * 1.2f), FontStyle.Normal, TextAnchor.MiddleCenter, customFont: false); // 箭头 ◂ ▸ 走原字体
+        _centerMuted = Label(A(p.Muted, 0.8f), Mathf.RoundToInt(14 * 1.2f), FontStyle.Normal, TextAnchor.MiddleCenter, customFont: false); 
+        _arrow = Label(p.Accent, Mathf.RoundToInt(15 * 1.2f), FontStyle.Normal, TextAnchor.MiddleCenter, customFont: false); 
         _subTabStyle = Label(p.Muted, Mathf.RoundToInt(12 * 1.2f), FontStyle.Normal, TextAnchor.MiddleCenter);
-        _smallBtn = Label(Color.white, Mathf.RoundToInt(11 * 1.2f), FontStyle.Normal, TextAnchor.MiddleCenter, customFont: false); // 删除等符号 ✕ 走原字体
+        _smallBtn = Label(Color.white, Mathf.RoundToInt(11 * 1.2f), FontStyle.Normal, TextAnchor.MiddleCenter, customFont: false); 
         _rowName = Label(p.Text, Mathf.RoundToInt(14 * 1.2f), FontStyle.Normal, TextAnchor.MiddleLeft);
         _rowName.wordWrap = false;
         _rowName.clipping = TextClipping.Clip;
@@ -2611,16 +2305,12 @@ private bool _inScroll;
         _rowInfo.wordWrap = false;
         _rowInfo.clipping = TextClipping.Clip;
         _tabStyle = Label(p.Muted, Mathf.RoundToInt(14 * 1.2f), FontStyle.Normal, TextAnchor.MiddleLeft);
-        // 第 248 轮：主区分区标题（内容区顶部那条 20pt 粗体），配合交叉淡入 + 上浮落位
+        
         _sectionTitle = Label(p.Text, Mathf.RoundToInt(20 * 1.2f), FontStyle.Bold, TextAnchor.MiddleLeft);
         _keyBadge = Label(p.Text, Mathf.RoundToInt(12 * 1.2f), FontStyle.Normal, TextAnchor.MiddleCenter);
         _star = Label(p.Accent, Mathf.RoundToInt(17 * 1.2f), FontStyle.Normal, TextAnchor.MiddleCenter, customFont: false);
     }
 
-    // 富文本 <color=#RRGGBB> 不带头 alpha，Unity 会按不透明渲染：
-    // 关闭菜单时这些彩色文字不会跟随 GUI.color 一起淡出，而是瞬间消失。
-    // 绘制时把当前 GUI.color.a 注入颜色标签，并临时把 GUI.color.a 置 1，
-    // 让最终 alpha 只由标签控制，与其他文字同步淡出。
     private static readonly Regex ColorTagRx = new Regex("<color=#([0-9A-Fa-f]{6})>", RegexOptions.Compiled);
 
     private void LabelFade(Rect r, string text, GUIStyle style)
@@ -2671,7 +2361,7 @@ private bool _inScroll;
         }
         else
         {
-            // 明确剥离自定义字体，强制用系统原生默认字体
+            
             s.font = null;
         }
         s.normal.textColor = color;

@@ -1,13 +1,9 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace Amethyst
 {
-    /// <summary>
-    /// Amethyst 品牌水晶标志（第 290 轮）。
-    /// 图标是程序化生成的紫水晶晶簇，和游戏内官方紫水晶装扮同色系；
-    /// 玩家可以用 `Amethyst/Resources/AmethystLogo.png` 覆盖它。
-    /// </summary>
+    
     internal static class AmethystLogo
     {
         private static Texture2D _texture;
@@ -52,10 +48,6 @@ namespace Amethyst
             Texture2D texture = Texture;
             if (texture == null) return;
 
-            // 第 291 轮：不能直接用 GUI.DrawTexture。
-            // Windows IL2CPP 下它会触发 `Method unstripping failed`，异常从 Draw 冒到
-            // DrawHeader，导致整个菜单只画完背景就中断（用户看到的全黑空窗口）。
-            // 改用和 AmethystIcons 相同的 GUIStyle + GUI.Box 路径，已在 IL2CPP 验证可用。
             if (_style == null) _style = new GUIStyle();
             _style.normal.background = texture;
 

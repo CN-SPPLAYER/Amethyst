@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using AmongUs.GameOptions;
 using HarmonyLib;
@@ -6,22 +6,6 @@ using Il2CppList = Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo>;
 
 namespace Amethyst;
 
-// 职业分配（开发者选项）。
-//
-// 参考：
-//   · EHR    `Modules\Random\IRandom.cs`（Default / NetRandom / HashRandom / Xorshift / MersenneTwister）
-//   · Onyx   `src\Host\NocturneForceRoles.cs`、`src\Patches\HnSPatches.cs`（躲猫猫）
-//   · Elysium `cheats\EspAndRoleCheats.cs`
-//
-// 教训（上一版为什么会卡住/黑屏）：
-//   参考模组在 `RoleManager.SelectRoles` 的 Prefix 里自行分配并 `return false` 跳过原版，
-//   但那份代码还负责把角色 RPC 发出去。我们只调了 `AssignRolesForTeam` 就跳过，
-//   客户端收不到角色 → 开始界面一直等 → 表现为「分配很久/卡住」。
-//
-// 现在的做法（不跳过原版，最稳）：
-//   · 算法：只在分配前洗牌（原版照跑，RPC 照发）。
-//   · 低人数生成内鬼：`SelectRoles` **Postfix** 里检查是否真的存在内鬼，若没有，
-//     再随机挑一名玩家补成内鬼（补发 `RpcSetRole`）。原版流程完整，不会卡。
 internal static class AmethystRoleAlgorithm
 {
     internal static int Mode
@@ -48,10 +32,6 @@ internal static class AmethystRoleAlgorithm
         };
     }
 
-    // Fisher-Yates（参考 BetterAmongUs `ShuffleHelper`）。
-    // ⚠ 必须先复制到 C# 托管 List 再重新 Clear/Add 回 IL2CPP List，
-    // 绝不能在 IL2CPP List 上直接使用索引器 (players[i] = players[j]) 改写，
-    // 否则会在 IL2CPP 原生指针迭代时引发 0xc0000005 内存冲突崩溃。
     internal static void Shuffle(Il2CppList players)
     {
         if (players == null || Mode <= 0 || players.Count < 2) return;
@@ -182,7 +162,6 @@ internal static class AmethystRoleAlgorithm
     }
 }
 
-// 算法：普通模式分配前洗牌。
 [HarmonyPatch(typeof(LogicRoleSelectionNormal), "AssignRolesFromList")]
 internal static class AmethystRoleAlgorithmShufflePatch
 {

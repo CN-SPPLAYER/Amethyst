@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -6,8 +6,6 @@ using System.Text.Json;
 
 namespace Amethyst;
 
-// 模组房间列表的纯数据层：DTO、上报 JSON、列表解析。
-// 不接触 Unity / 游戏对象，便于单独检查和复用。
 internal sealed class AmethystRoom
 {
     internal string Code = string.Empty;
@@ -50,7 +48,6 @@ internal static class AmethystRoomApi
     internal static string RoomsUrl => BaseUrl + "/home/api/rooms";
     internal static string ReportUrl => BaseUrl + "/home/api/room";
 
-    // 上报体与官网文档字段一一对应；sender（好友代码）默认不上报。
     internal static string BuildReport(string code, string host, string state, string map, string mode,
         int players, int maxPlayers, int ping, string region, string note)
     {
@@ -74,8 +71,7 @@ internal static class AmethystRoomApi
                     w.WriteNumber("ping", Math.Max(0, ping));
                     if (!string.IsNullOrEmpty(region)) w.WriteString("region", region);
                     w.WriteString("role", "host");
-                    // 语言没有独立字段（服务端会丢弃未知字段），但 note 会原样回传；
-                    // 用 "lang=xx" 作为房间语言标记，客户端据此筛选。
+                    
                     if (!string.IsNullOrEmpty(note)) w.WriteString("note", note);
                     w.WriteEndObject();
                 }
@@ -104,7 +100,6 @@ internal static class AmethystRoomApi
         catch { return string.Empty; }
     }
 
-    // 容错解析：缺字段给默认值，未知字段忽略，单条坏数据不拖垮整页。
     internal static bool TryParse(string json, List<AmethystRoom> into, out int count, out string message)
     {
         count = 0;

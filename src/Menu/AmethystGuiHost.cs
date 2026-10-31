@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -28,7 +28,7 @@ public sealed class AmethystGuiHost : MonoBehaviour
         if (toast != null) order.Add(toast.DrawGui);
         if (btn != null) order.Add(btn.DrawGui);
         if (update != null) order.Add(update.DrawGui);
-        // 第 213 轮：启动动画改用世界空间 SpriteRenderer/TextMeshPro + 协程，不再走 IMGUI。
+        
         _draw = order.ToArray();
     }
 

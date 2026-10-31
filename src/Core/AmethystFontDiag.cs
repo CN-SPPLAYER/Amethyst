@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -18,7 +18,6 @@ namespace Amethyst
                     var matches = names.Where(n => n.IndexOf("Smiley", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("得意", StringComparison.OrdinalIgnoreCase) >= 0).ToArray();
                     AmethystPlugin.Logger?.LogInfo($"[FontDiag] Smiley matches in OSInstalledFontNames: {string.Join(", ", matches)}");
                     
-                    // 打印前 10 个系统字体作为采样
                     AmethystPlugin.Logger?.LogInfo($"[FontDiag] Sample OS Fonts: {string.Join(", ", names.Take(10))}");
                 }
             }

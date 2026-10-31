@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using HarmonyLib;
 using TMPro;
 using UnityEngine;
@@ -14,17 +14,14 @@ internal static class AmethystMainMenuButtons
     private static PassiveButton ReportButton;
     private static PassiveButton UpdateButton;
 
-    // 「举报作弊者」跳转的外部举报页。写死常量而不是内联到 lambda 里：
-    // 点击时要同时写剪贴板 + 开浏览器，两处必须用同一个字符串，避免日后改一半。
     private const string ReportUrl = "https://api2.elauk.top/acban/submit";
 
-    // 四个按钮共用同一行（y 相同）、同一固定间距，新增按钮只要接在右边一格。
     private const float RowY = -1.3f;
     private const float ButtonSpacing = 1.8f;
     private const float GitHubX = -2.3f;
     private const float QQGroupX = -0.5f;
-    private const float ReportX = QQGroupX + ButtonSpacing;  // = 1.3
-    private const float UpdateX = ReportX + ButtonSpacing;   // = 3.1，接在「举报作弊者」右侧一格
+    private const float ReportX = QQGroupX + ButtonSpacing;  
+    private const float UpdateX = ReportX + ButtonSpacing;   
 
     internal static bool Enabled => AmethystConfig.MainMenuButtons == null || AmethystConfig.MainMenuButtons.Value;
 
@@ -33,7 +30,7 @@ internal static class AmethystMainMenuButtons
     private static void Start_Prefix(MainMenuManager __instance)
     {
         if (!Template) Template = __instance.quitButton;
-        // 第 221 轮：顺手给「复盘显示/隐藏」按钮抓模板（它要用原生 PassiveButton 克隆体，见 AmethystRecapButton）。
+        
         AmethystRecapButton.SetBase(Template);
     }
 
@@ -54,7 +51,6 @@ internal static class AmethystMainMenuButtons
             return;
         }
 
-        // GitHub 按钮
         if (!GitHubButton || !GitHubButton.gameObject)
         {
             GitHubButton = CreateButton(
@@ -76,7 +72,6 @@ internal static class AmethystMainMenuButtons
             UpdateLabel(GitHubButton, AmethystText.T("GitHub"));
         }
 
-        // QQ群 按钮
         if (!QQGroupButton || !QQGroupButton.gameObject)
         {
             QQGroupButton = CreateButton(
@@ -97,7 +92,6 @@ internal static class AmethystMainMenuButtons
             UpdateLabel(QQGroupButton, AmethystText.T("QQGroup"));
         }
 
-        // 举报作弊者 按钮（「QQ群」按钮右侧一格；点一下直接把浏览器带到举报页）
         if (!ReportButton || !ReportButton.gameObject)
         {
             ReportButton = CreateButton(
@@ -107,8 +101,7 @@ internal static class AmethystMainMenuButtons
                 new Color32(240, 110, 110, 255),
                 () =>
                 {
-                    // 先写剪贴板再开浏览器：OpenURL 在某些环境（无默认浏览器 / 被安全软件拦）
-                    // 会静默失败，留一份链接在剪贴板里用户还能手动粘。与 GitHub 按钮同一套路。
+                    
                     try { GUIUtility.systemCopyBuffer = ReportUrl; } catch { }
                     try { Application.OpenURL(ReportUrl); } catch { }
                     AmethystToast.Push(AmethystText.T("ReportCheater"), AmethystText.T("CopiedToClipboard"), 3.0f, AmethystNotifyKind.Info);
@@ -122,8 +115,6 @@ internal static class AmethystMainMenuButtons
             UpdateLabel(ReportButton, AmethystText.T("ReportCheater"));
         }
 
-        // 检查更新 按钮（「举报作弊者」右侧一格）
-        // Android/Starlight 上没有 cmd.exe 与重启流程，自动更新不可用，因此不创建该按钮。
         bool showUpdate = !AmethystPlatform.IsAndroid;
         if (showUpdate && (!UpdateButton || !UpdateButton.gameObject))
         {
@@ -171,10 +162,6 @@ internal static class AmethystMainMenuButtons
         catch { }
     }
 
-    // 「举报作弊者」是这一行里唯一的长标签：5 个汉字在 TMP 里约占 5 em，
-    // 而相邻的 "GitHub"（6 个西文字符）只占约 3 em —— 照抄 3.5 号定长字会横向顶出按钮底板。
-    // 这里只给这一个按钮开 TMP 自动缩字号：放得下就还是 3.5（与另外两个按钮一致），
-    // 放不下才逐级降到 fontSizeMin，保证文字始终留在按钮内、也不会去压旁边的按钮。
     private static void EnableAutoShrink(PassiveButton button, float min = 1.5f, float max = 3.5f)
     {
         var text = button?.transform.Find("FontPlacer/Text_TMP")?.GetComponent<TMP_Text>();
