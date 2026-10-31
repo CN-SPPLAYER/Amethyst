@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using BepInEx.Unity.IL2CPP.Utils.Collections;
 using HarmonyLib;
 using InnerNet;
@@ -6,11 +6,6 @@ using UnityEngine;
 
 namespace Amethyst;
 
-// 生成洪水(spawn flood)防护：作弊端在单帧内批量生成大量对象会导致卡死/崩溃。
-// 参考 Nocturne(NocturneSpawnFlood)/Elysium 的防护思路：每帧最多处理 CapPerFrame 个生成，
-// 超出部分直接丢弃（进房/开局/Lobby/对局有 5 秒宽限，正常流程不受影响）。
-// 开关：Guard.SpawnFloodGuard（默认开，属于“缺失功能”补齐项——旧的 BlockFakeMeetings
-// 描述中写了“拦截生成洪水”却从未实现）。
 internal static class AmethystSpawnFlood
 {
     private const int CapPerFrame = 200;

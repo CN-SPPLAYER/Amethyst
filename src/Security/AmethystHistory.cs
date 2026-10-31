@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -6,7 +6,6 @@ using BepInEx;
 
 namespace Amethyst;
 
-// 从玩家历史里查到的已知信息
 internal sealed class KnownPlayer
 {
     internal string Name = string.Empty;
@@ -17,23 +16,10 @@ internal sealed class KnownPlayer
     internal string LastSeen = string.Empty;
 }
 
-// ===== 历史记录（玩家历史 + 作弊历史）=====
-//
-// 按要求：
-//   - **强制开启**，没有开关，也不出现在任何 UI 里，只写文件；
-//   - 文件与封禁名单同级目录：`<游戏根目录>/Amethyst/`（即 AmethystAccess 的 AmethystDir）；
-//   - 玩家历史：每次**进入 / 离开**都追加一条（名字 / 好友码 / PUID / 平台 / 等级）；
-//   - 作弊历史：记录触发反作弊的玩家（名字 / 好友码 / PUID / 平台 / 原因）。
-//
-// 另参考 OnyxMenu `Player\NocturneNameHistory.cs` 的做法，给玩家历史加了**回读**能力：
-//   启动后惰性把 PlayerHistory.txt 解析进内存索引（按好友码 / PUID 建键，保留最新一条），
-//   之后每次写入同步更新索引。这样在「玩家大退、Character 已为 null」这类拿不到实时名字的场景，
-//   可以**读取玩家历史**回填上一次已知的名字 —— 这正是该文件存在的意义。
 internal static class AmethystHistory
 {
     private static readonly object Gate = new object();
 
-    // 好友码 / PUID -> 最近一次已知信息
     private static readonly Dictionary<string, KnownPlayer> Index =
         new Dictionary<string, KnownPlayer>(StringComparer.OrdinalIgnoreCase);
     private static bool _indexLoaded;
@@ -46,7 +32,6 @@ internal static class AmethystHistory
     private const string PlayerHeader = "# Amethyst 玩家历史 / Player history  ——  时间 | 事件 | 名字 | 好友码 | PUID | 平台 | 等级";
     private const string CheatHeader = "# Amethyst 作弊历史 / Cheat history  ——  时间 | 名字 | 好友码 | PUID | 平台 | 原因";
 
-    // ===== 回读：按好友码 / PUID 查询最近一次已知信息 =====
     internal static KnownPlayer Lookup(string fc, string puid)
     {
         try
@@ -59,29 +44,24 @@ internal static class AmethystHistory
         return null;
     }
 
-    // 便捷：取历史里记录过的名字（拿不到就返回空串）
     internal static string LastKnownName(string fc, string puid)
     {
         KnownPlayer k = Lookup(fc, puid);
         return k != null ? (k.Name ?? string.Empty) : string.Empty;
     }
 
-    // ===== 写入：玩家进入 / 离开 =====
     internal static void Player(string action, string name, string fc, string puid, string platform, string level)
     {
         try
         {
             if (string.IsNullOrEmpty(name) && string.IsNullOrEmpty(fc) && string.IsNullOrEmpty(puid)) return;
 
-            // 必须**先**把已有历史读进索引：否则首次写入会把 _indexLoaded 置为 true，
-            // 导致老会话的历史永远不会被加载，回读就查不到以前见过的人。
             EnsureIndex();
 
             string time = Now();
             Append(PlayerTxt, PlayerHeader,
                 $"{time} | {Clean(action)} | {Clean(name)} | {Clean(fc)} | {Clean(puid)} | {Clean(platform)} | {Clean(level)}");
 
-            // 同步更新内存索引（供后续回读，避免重复解析整个文件）
             try
             {
                 lock (Gate) { Remember(fc, puid, name, platform, level, time); }
@@ -91,7 +71,6 @@ internal static class AmethystHistory
         catch { }
     }
 
-    // ===== 写入：触发反作弊 =====
     internal static void Cheat(string name, string fc, string puid, string platform, string reason)
     {
         try
@@ -103,8 +82,6 @@ internal static class AmethystHistory
         }
         catch { }
     }
-
-    // ===== 索引 =====
 
     private static void EnsureIndex()
     {
@@ -138,7 +115,6 @@ internal static class AmethystHistory
         }
     }
 
-    // 同一键保留**最新**一条（文件是追加式，后写覆盖先写）
     private static void Remember(string fc, string puid, string name, string platform, string level, string time)
     {
         void Put(string key)
@@ -161,8 +137,6 @@ internal static class AmethystHistory
         if (!string.IsNullOrEmpty(puid)) Put("puid:" + puid);
     }
 
-    // ===== 底层写入 =====
-
     private static void Append(string path, string header, string line)
     {
         try
@@ -181,7 +155,6 @@ internal static class AmethystHistory
 
     private static string Now() => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-    // 清理换行与分隔符，保证一行一条记录、便于后续检索
     private static string Clean(string s)
     {
         if (string.IsNullOrEmpty(s)) return string.Empty;

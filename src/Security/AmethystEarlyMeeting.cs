@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using Hazel;
 using UnityEngine;
 using Amethyst.Patches;
@@ -15,9 +15,7 @@ internal static class AmethystEarlyMeeting
 
     internal static void MarkGameStart()
     {
-        // ⚠ 性能（第 151 轮）：这里以前**每次**都写一行日志。
-        // 用连点器狂点时 `BeginGame` 会被反复触发 ⇒ 反复写 `LogOutput.log`（磁盘 I/O），
-        // 帧率就掉下来了。现在只在**状态真正变化**时记一次。
+        
         bool wasArmed = roundBlockArmed;
         roundBlockArmed = true;
         shhhBlockUntil = -1f;
@@ -96,7 +94,7 @@ internal static class AmethystEarlyMeetingShhhPatch
     public static void Prefix()
     {
         AmethystEarlyMeeting.MarkShhhSeen();
-        // SHHH 播放即表示游戏正式开始，立即收起加载条（消除 0.1-0.2 秒残留）
+        
         try { AmethystBetterLoadingPatch.HideBar(); } catch { }
     }
 }

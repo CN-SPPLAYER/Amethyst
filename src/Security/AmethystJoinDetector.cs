@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using InnerNet;
 using UnityEngine;
 
@@ -71,11 +71,9 @@ public sealed class AmethystJoinDetector : MonoBehaviour
             ClientData client = cursor.Current;
             if (client == null || client.Id < 0) continue;
             _live.Add(client.Id);
-            // 只在解析到**有效**名字时才更新缓存：玩家大退/断线时 Character 会先变 null，
-            // 若用空值或 "TESTNAME" 覆盖，离开提示就会显示成占位名。
+            
             string resolved = ResolveName(client);
-            // 拿不到实时名字时，**读取玩家历史**回填上一次已知的名字
-            // （参考 OnyxMenu 的 NocturneNameHistory：按好友码回查历史昵称）。
+            
             if (string.IsNullOrEmpty(resolved))
             {
                 try
@@ -99,7 +97,7 @@ public sealed class AmethystJoinDetector : MonoBehaviour
 
             if (!_pending.ContainsKey(client.Id)) _pending[client.Id] = now;
             bool hasChar = client.Character != null && client.Character.Data != null;
-            // 等待玩家信息（角色/名字）就绪后再提示，避免用未加载的数据生成异常文案
+            
             string readyName = ResolveName(client);
             bool hasName = !string.IsNullOrEmpty(readyName) && readyName != "?" && !readyName.StartsWith("#");
             if ((hasChar && hasName) || now - _pending[client.Id] >= PendingTimeout)
@@ -203,11 +201,9 @@ public sealed class AmethystJoinDetector : MonoBehaviour
         AmethystNotifyKind kind = sus ? AmethystNotifyKind.Danger : known ? AmethystNotifyKind.Warning : AmethystNotifyKind.Info;
         string mark = sus ? "⚠ " : known ? "☺ ＋ " : "＋ ";
         string nameShow = AmethystColors.Name(client) ?? name;
-        // ⚠ 第 116 轮：**不再发进房提示**（"显示平台及等级"功能已移除）——
-        //   玩家正常进/离开完全交给原版通知；这里只保留事件日志与玩家历史。
+        
         AmethystEventLog.Add(mark + nameShow + " " + AmethystText.T("Joined") + " · " + tail + extra, kind, AmethystEventCat.Join);
 
-        // 玩家历史（强制开启，只写文件）：进入
         AmethystHistory.Player(
             AmethystText.T("HistoryJoin"),
             name,
@@ -222,15 +218,13 @@ public sealed class AmethystJoinDetector : MonoBehaviour
         if (!AmethystDisconnect.MarkLeaveAnnounced(id)) return;
         string name = _names.TryGetValue(id, out string n) ? n : AmethystText.T("Player_2");
         string nameShow = _colors.TryGetValue(id, out int cid) ? AmethystColors.Name(name, cid) : name;
-        // 本反作弊执行过踢/封时，单独标明（区别于其他反作弊，如树懒）
+        
         string reason = AmethystDisconnect.TryGetAction(id, out bool ourBan, out string ourReason)
             ? AmethystText.T(ourBan ? "BannedByUs" : "KickedByUs", ourReason ?? string.Empty)
             : ReasonText(AmethystDisconnect.Get(id));
-        // ⚠ 第 116 轮：**不再发离开提示** —— 玩家正常离开保持原版通知，这里只记事件日志与历史。
+        
         AmethystEventLog.Add("－ " + nameShow + " " + reason, AmethystNotifyKind.Warning, AmethystEventCat.Join);
 
-        // 玩家历史（强制开启，只写文件）：离开
-        // 离开时 ClientData 已经/即将消失，信息取自进入时缓存下来的 RecentEntry。
         string level = "?", platform = "?", fc = string.Empty, puid = string.Empty;
         if (_seen.TryGetValue(id, out RecentEntry e) && e != null)
         {
@@ -242,7 +236,6 @@ public sealed class AmethystJoinDetector : MonoBehaviour
                 name = e.Name;
         }
 
-        // 仍然只有通用称呼时，读取玩家历史回填（大退场景常常走到这里）
         if ((string.IsNullOrEmpty(name) || name == AmethystText.T("Player_2")) && (fc.Length > 0 || puid.Length > 0))
         {
             try
@@ -256,15 +249,6 @@ public sealed class AmethystJoinDetector : MonoBehaviour
         AmethystHistory.Player(AmethystText.T("HistoryLeave"), name, fc, puid, platform, level);
     }
 
-    // 依据游戏断开原因给出更准确的提示。
-    //
-    // 参考 BetterAmongUs `Patches\Gameplay\Player\PlayerJoinAndLeftPatch.cs` 的 `BetterShowNotification`
-    // （第 164-190 行）：它显式列出 ExitGame / ClientTimeout / Kicked / Banned / Hacking / Error / Unknown，
-    // 而**其余一切原因都归到「离开」**（default → DisconnectReason.Left）。
-    //
-    // 之前的 bug：本机 `DisconnectReasons` 枚举里**正常退出走的是 `IntentionalLeaving`（=208）**，
-    // 既不是 ExitGame 也不是其它已列出的值，于是落到 default 被显示成「断开连接（原因未知）」，
-    // 这正是「玩家正常离开却提示原因未知」的成因。现补上该分支，并让 default 与 BetterAmongUs 一致归为「离开」。
     private static string ReasonText(DisconnectReasons reason)
     {
         switch (reason)
@@ -285,8 +269,7 @@ public sealed class AmethystJoinDetector : MonoBehaviour
             case DisconnectReasons.Unknown:
                 return AmethystText.T("DisconnectUnknown");
             default:
-                // 与 BetterAmongUs 一致：未特别列出的原因一律按「离开游戏」处理，
-                // 避免把正常离开误报成「原因未知」。
+                
                 return AmethystText.T("DisconnectLeft");
         }
     }
@@ -300,8 +283,6 @@ public sealed class AmethystJoinDetector : MonoBehaviour
         }
         catch { }
 
-        // 平台名只作为**最后**的兜底，且必须排除占位值（如 "TESTNAME"）。
-        // 玩家直接大退时 Character 会先变为 null，此前会把 "TESTNAME" 当成玩家名显示出来。
         try
         {
             if (client.PlatformData != null)
@@ -313,11 +294,9 @@ public sealed class AmethystJoinDetector : MonoBehaviour
         }
         catch { }
 
-        // 返回空串：调用方会保留上一次已知的有效名字，而不是用占位值覆盖。
         return string.Empty;
     }
 
-    // 占位 / 无意义的名字，不能当作玩家名使用
     private static bool IsPlaceholderName(string s)
     {
         if (string.IsNullOrWhiteSpace(s)) return true;

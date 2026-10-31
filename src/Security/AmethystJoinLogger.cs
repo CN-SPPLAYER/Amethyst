@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using InnerNet;
 using UnityEngine;
 
@@ -81,7 +81,7 @@ public sealed class AmethystJoinLogger : MonoBehaviour
 
     private void Log(ClientData c)
     {
-        // 玩家历史是强制开启的（只写文件），不再受"显示平台及等级"开关控制
+        
         int tag = 0;
         string platform = "-";
         string raw = string.Empty;
