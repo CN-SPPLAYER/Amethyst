@@ -1,7 +1,8 @@
 <div align="center">
 
 # Amethyst v1.1.8
-<img width="1602" height="898" alt="d775916d6ada8995bc97655354dc7338" src="https://github.com/user-attachments/assets/1d7ba60f-5f79-494d-a9ab-a22461f07588" />
+<img width="2021" height="1148" alt="Amethyst_MainMenuArt_Logo" src="https://github.com/user-attachments/assets/cfd02850-f4ae-4520-b929-386ec97ceef0" />
+
 
 **An anti-cheat and utility mod for Among Us**
 
