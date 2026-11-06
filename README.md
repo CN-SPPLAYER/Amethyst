@@ -1,6 +1,6 @@
 <div align="center">
 
-# Amethyst v1.1.8
+# Amethyst
 <img width="2021" height="1148" alt="Amethyst_MainMenuArt_Logo" src="https://github.com/user-attachments/assets/cfd02850-f4ae-4520-b929-386ec97ceef0" />
 
 
