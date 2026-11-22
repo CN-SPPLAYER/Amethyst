@@ -26,36 +26,6 @@ Amethyst is an anti-cheat and optimisation mod for Among Us. It guards against a
 > **Note:** The anti-cheat capability of Amethyst depends on host authority. If you are not the host, the majority of the anti-cheat features will not take effect.
 
 ---
-
-## Features
-
-### Anti-cheat
-
-- **RPC detection** — captures anomalous RPCs.
-- **Anomalous RPCs** — blocking may be enabled or disabled.
-- **Cheater response** — selectable between **None**, **Warn**, **Invalid kick**, **Kick** and **Ban**. For kick and ban, a threshold may be configured for the number of anti-cheat detections required before the action is applied.
-
-### Player management
-
-- **Ban list** — kicks or bans players upon joining, by Friend Code or PUID.
-- **Player history** — every player who joins or leaves the lobby is recorded to `Amethyst/PlayerHistory.txt`.
-- **Cheat history** — every player who triggers the anti-cheat is recorded to `Amethyst/CheatHistory.txt`.
-
----
-
-## Hotkeys
-
-| Key | Action |
-|:---:|:-------|
-| `Insert` | Open or close the main menu |
-| `F2` | Show or hide recap information |
-| `F6` | Copy the current lobby information |
-| `M` | Open or close the music player |
-
-> All hotkeys may be reassigned in the mod settings.
-
----
-
 ## Referenced Code and Acknowledgements
 
 Portions of the code, user interface and assets of Amethyst are derived from the following open-source Among Us projects. Their authors are gratefully acknowledged. Should you not wish for your assets to be used, please contact me and they will be removed.
